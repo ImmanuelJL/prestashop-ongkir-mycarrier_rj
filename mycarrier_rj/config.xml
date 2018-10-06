@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <module>
+            <name>mycarrier_rj</name>
+            <displayName><![CDATA[My Carrier RJ]]></displayName>
+            <version><![CDATA[1.0]]></version>
+            <description><![CDATA[My Carrier RJ, hitung ongkir jasa pengiriman barang atau ekspedisi via Jalur Nugraha Ekakurir (JNE), TIKI (Citra Van Titipan Kilat), POS (POS Indonesia). Menggunakan API dari https://rajaongkir.com. Module untuk prestashop GRATIS buatan Immanuel Julianto Lasmana, untuk dokumentasi cek http://immanueljl.blogspot.co.id]]></description>
+            <author><![CDATA[Immanuel Julianto Lasmana]]></author>
+            <tab><![CDATA[shipping_logistics]]></tab>
+            <confirmUninstall>Are you sure you want to uninstall?</confirmUninstall>
+            <is_configurable>1</is_configurable><!-- 0 for unconfigurable 1 for configurable -->
+            <need_instance>0</need_instance>
+            <limited_countries></limited_countries>
+        </module>
