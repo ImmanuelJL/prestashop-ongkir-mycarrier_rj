@@ -139,7 +139,7 @@ class CustomerAddressFormatter extends CustomerAddressFormatterCore implements F
                 
                 foreach ($responseCity->rajaongkir->results as $city) {
                     $formField->addAvailableValue(
-                        $city->type . ' ' . $city->city_name,
+                        $city->city_name,
                         $city->city_name . ' (' . $city->type . ')'
                     );
                 }
