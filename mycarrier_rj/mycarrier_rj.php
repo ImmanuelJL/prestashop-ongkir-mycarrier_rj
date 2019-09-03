@@ -379,13 +379,15 @@ class mycarrier_rj extends CarrierModule
           
            foreach ($responseCity->rajaongkir->results as $key) {
                if ($key->city_name == $from) {
-                   $fromCity = $key->city_id;               
+                   $fromCity = $key->city_id;
+                   break;               
                }
            } 
 
            foreach ($responseCity->rajaongkir->results as $key) {
                if ($key->city_name == $to) {
-                   $toCity = $key->city_id;               
+                   $toCity = $key->city_id;
+                   break;               
                }
            }   
         /* GET CITY FROM AND TO FROM LOCAL JSON FILE (NOT UPDATED BUT FASTER) */
@@ -560,6 +562,7 @@ class mycarrier_rj extends CarrierModule
                 foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
                     if( $value->service == 'REG' ){
                         $ongkirTiki2=$value->cost[0]->value;
+                        break;
                     }
                 }
             }
@@ -568,6 +571,7 @@ class mycarrier_rj extends CarrierModule
                 foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
                     if( $value->service == 'ECO' ){
                         $ongkirTiki3=$value->cost[0]->value;
+                        break;
                     }
                 }
             }
@@ -576,6 +580,7 @@ class mycarrier_rj extends CarrierModule
                 foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
                     if( $value->service == 'ONS' ){
                         $ongkirTiki4=$value->cost[0]->value;
+                        break;
                     }
                 }
             }    
@@ -590,6 +595,7 @@ class mycarrier_rj extends CarrierModule
                 foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
                     if( $value->service == 'Paket Kilat Khusus' ){
                         $ongkirPos2=$value->cost[0]->value;
+                        break;
                     }
                 }
             }
@@ -610,6 +616,7 @@ class mycarrier_rj extends CarrierModule
                 foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
                     if( $value->service == 'Express Next Day Barang' ){
                         $ongkirPos6=$value->cost[0]->value;
+                        break;
                     }
                 }
             }
