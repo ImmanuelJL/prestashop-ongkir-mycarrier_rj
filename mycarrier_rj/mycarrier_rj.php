@@ -359,7 +359,8 @@ class mycarrier_rj extends CarrierModule
     public function getOrderShippingCost($params, $shipping_cost)//CALCULATE SHIPPING COST HERE
     {
 
-        $weight = $this->context->cart->getTotalWeight($this->context->cart->getProducts());//GET TOTAL WEIGHT PN CART
+        $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000;//GET TOTAL WEIGHT PN CART
+        // EDITED 11-05-2020, getTotalWeight DI KALI 1000 KARENA INPUT DARI CMS DALAM SATUAN KG SEDANGKAN API RAJA ONGKIR DALAM SATUAN GRAM
 
         //GET API KEY & CITY FROM DATABASE
         $sqlMyCarrier = 'SELECT * FROM '._DB_PREFIX_.'mycarrier_rj_ijl WHERE id_mycarrier_rj_ijl = 1';
