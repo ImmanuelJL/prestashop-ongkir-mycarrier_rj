@@ -1,6 +1,6 @@
 # Prestashop Module untuk biaya pengiriman menggunakan RAJA ONGKIR
 
-Silahkan cek http://immanueljl.blogspot.co.id untuk informasi lebih lanjut
+Silahkan cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut
 
 ## NOTE:
 1. Module ini tidak berafiliasi dengan RAJA ONGKIR maupun Prestashop
