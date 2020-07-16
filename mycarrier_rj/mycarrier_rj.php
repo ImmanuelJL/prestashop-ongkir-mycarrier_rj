@@ -539,53 +539,10 @@ class mycarrier_rj extends CarrierModule
     }
 
     public function hookActionCarrierUpdate($params) {
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj', $params['carrier']->id);
+        foreach ($this->_carriers as $carrier) {
+            if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . "{$carrier}_reference")) {
+                Configuration::updateValue(self::PREFIX . "{$carrier}", $params['carrier']->id);
+            }
         }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj2_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj2', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj3_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj3', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj31_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj31', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj32_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj32', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj4_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj4', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj5_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj5', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj6_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj6', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj7_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj7', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj8_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj8', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj9_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj9', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj10_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj10', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj11_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj11', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj12_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj12', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj13_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj13', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj14_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj14', $params['carrier']->id);
-        }*/
     }
 }
