@@ -20,9 +20,9 @@ class mycarrier_rj extends CarrierModule
     const PREFIX = 'mycarrier_rj_mcj_';
     const FRONT_TABLE_NAME = _DB_PREFIX_ . 'mycarrier_rj_ijl';
 
-    protected static $_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
-    protected static $_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
-    protected static $_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+    protected $_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
+    protected $_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
+    protected $_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
 
     public $id_carrier;
 
@@ -206,17 +206,17 @@ class mycarrier_rj extends CarrierModule
                     }
 
                     if ($carrier_name == "JNE") {
-                        copy(self::$_IMAGE_JNE,
+                        copy($this->_IMAGE_JNE,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
                     if ($carrier_name == "TIKI") {
-                        copy(self::$_IMAGE_TIKI,
+                        copy($this->$_IMAGE_TIKI,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
                     if ($carrier_name == "POS") {
-                        copy(self::$_IMAGE_POS,
+                        copy($this->$_IMAGE_POS,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
