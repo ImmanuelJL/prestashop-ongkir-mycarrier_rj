@@ -20,9 +20,9 @@ class mycarrier_rj extends CarrierModule
     const PREFIX = 'mycarrier_rj_mcj_';
     const FRONT_TABLE_NAME = _DB_PREFIX_ . 'mycarrier_rj_ijl';
 
-    const IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
-    const IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
-    const IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+    protected static $_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
+    protected static $_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
+    protected static $_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
 
     public $id_carrier;
 
@@ -202,21 +202,21 @@ class mycarrier_rj extends CarrierModule
                              VALUES ('" . $carrier->id . "', '" . NULL . "', '" . $rangeWeight->id . "', '" . $zone_id . "', '25')",
                         );
 
-                        foreach ($zone_queries as $zone_query) { Db::getInstance()->Execute($zone_query) }
+                        foreach ($zone_queries as $zone_query) { Db::getInstance()->Execute($zone_query); }
                     }
 
                     if ($carrier_name == "JNE") {
-                        copy(self::IMAGE_JNE,
+                        copy(self::$_IMAGE_JNE,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
                     if ($carrier_name == "TIKI") {
-                        copy(self::IMAGE_TIKI,
+                        copy(self::$_IMAGE_TIKI,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
                     if ($carrier_name == "POS") {
-                        copy(self::IMAGE_POS,
+                        copy(self::$_IMAGE_POS,
                              _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
 
