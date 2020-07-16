@@ -407,7 +407,7 @@ class mycarrier_rj extends CarrierModule
         $from = $rowMyCarrier['from_city'];
         $to = $address->city;
 
-        $weight = max(($weight * 1.00), 1.00);
+        $weight = max(($weight * 1.0), 1000.00); // weight in RajaOngkir API is in grams, and minimum weight is 1kg.
 
         $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);
         $responseCity = json_decode($responseCity);
