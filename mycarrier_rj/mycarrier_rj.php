@@ -24,6 +24,8 @@ class mycarrier_rj extends CarrierModule
     protected $_IMAGE_JNE;
     protected $_IMAGE_TIKI;
     protected $_IMAGE_POS;
+    protected $_LOG_PATH;
+    protected $_LOG_PREFIX;
 
     public $id_carrier;
 
@@ -85,6 +87,9 @@ class mycarrier_rj extends CarrierModule
         $this->_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
         $this->_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
         $this->_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+
+        $this->_LOG_PATH   = _PS_ROOT_DIR_ . "/app/logs/";
+        $this->_LOG_PREFIX = "mycarrier-rj";
 
         $this->displayName = $this->l('My Carrier RJ');
         $this->description = $this->l('My Carrier RJ, hitung ongkir jasa pengiriman barang'
@@ -374,7 +379,7 @@ class mycarrier_rj extends CarrierModule
         return $helper->generateForm($fields_form);
     }
 
-    protected function checkRajaOngkirApi($origin, $destination, $weight, $courier) {
+    protected function checkRajaOngkirApi($api_key, $origin, $destination, $weight, $courier) {
         $curl_obj = curl_init();
 
         curl_setopt_array($curl_obj, array(
@@ -387,7 +392,7 @@ class mycarrier_rj extends CarrierModule
             CURLOPT_POST           => TRUE,
             CURLOPT_POSTFIELDS     => "origin={$origin}&destination={$destination}&weight={$weight}&courier={$courier}",
             CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
-            CURLOPT_HTTPHEADER     => array( "key: " . $rowMyCarrier["api_key"] ),
+            CURLOPT_HTTPHEADER     => array( "key: {$api_key}" ),
         ));
 
         $response = curl_exec($curl_obj);
@@ -410,7 +415,7 @@ class mycarrier_rj extends CarrierModule
                 $service_prefix = $l_service_properties["prefix"];
 
                 if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . "{$service_prefix}_reference"))) {
-                    $carrier_flag = $l_service_properties["rj_api_courier"];
+                    $carrier_flag = $l_carrier_properties["rj_api_courier"];
                     $carrier_name = $l_carrier_name;
                     $service_name = $l_service_name;
                     $service_flag = $l_service_properties["rj_service"];
@@ -436,9 +441,10 @@ class mycarrier_rj extends CarrierModule
         $rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier);
 
         $address = new Address($this->context->cart->id_address_delivery);
+        $state = new State();
 
         $from = $rowMyCarrier['from_city'];
-        $to = $address->city;
+        $to = $state::getNameById($address->id_state);
 
         $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);
         $responseCity = json_decode($responseCity);
@@ -446,9 +452,17 @@ class mycarrier_rj extends CarrierModule
         $originCity = NULL;
         $destinationCity = NULL;
 
+
         foreach ($responseCity->rajaongkir->results as $key) {
             if ($key->city_name == $from) { $originCity = $key->city_id; }
-            if ($key->city_name == $to)   { $destinationCity = $key->city_id; }
+
+            if(preg_match_all("/\(([^\]]*)\)/", $to, $matches)) {
+                if($matches[1][0] == 'Kota') {
+                    $temp = explode("(", $to);
+                    if(trim($temp[0]) == $key->city_name && $key->type == 'Kota') { $destinationCity = $key->city_id; }
+                }
+            } elseif ($key->city_name == $to) { $destinationCity = $key->city_id; }
+            else { continue; }
 
             if (! is_null($originCity) AND ! is_null($destinationCity)) { break; }
         }
@@ -457,8 +471,8 @@ class mycarrier_rj extends CarrierModule
 
         // we got origin and destination.
         $cache_id = "ShoppingCost::{$carrier_flag}::{$originCity}_{$destinationCity}_{$weight}";
-        if (! Cache::is_stored($cache_id)) {
-            $roa = $this->checkRajaOngkirApi($originCity, $destinationCity, $weight, $carrier_flag);
+        if (! Cache::isStored($cache_id)) {
+            $roa = $this->checkRajaOngkirApi($rowMyCarrier["api_key"], $originCity, $destinationCity, $weight, $carrier_flag);
             $response = $roa[0];
             $error_response = $roa[1];
 
@@ -474,8 +488,9 @@ class mycarrier_rj extends CarrierModule
         }
 
         // we got API response in $response, now we need to compare to our $service_flag to get shipping cost.
-        if (isset($response->rajaongkir->results[0]->costs[0]->cost[0]->value)) { // just to validate our response
-            foreach ($response->rajaongkir->results[0]->costs as $value) {
+        $response_obj = json_decode($response);
+        if (isset($response_obj->rajaongkir->results[0]->costs[0]->cost[0]->value)) { // just to validate our response
+            foreach ($response_obj->rajaongkir->results[0]->costs as $value) {
                 if ($value->service == $service_flag) { return $value->cost[0]->value; }
             }
         }
@@ -498,5 +513,19 @@ class mycarrier_rj extends CarrierModule
                 }
             }
         }
+    }
+
+    protected function log($message) {
+        $file_ext = '.log';
+        $ymd = strftime("%Y%m%d");
+        $file_path = "{$this->_LOG_PATH}{$this->_LOG_PREFIX}_{$ymd}{$file_ext}";
+
+        if (! $fp = @fopen($file_path, "ab")) { return FALSE; }
+
+        flock($fp, LOCK_EX);
+        $ctime = strftime("%Y-%m-%d %H:%M:%S");
+        fwrite($fp, "[{$ctime}] {$message}\n");
+
+        fclose($fp);
     }
 }
