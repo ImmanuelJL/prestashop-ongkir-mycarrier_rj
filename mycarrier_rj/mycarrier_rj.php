@@ -20,6 +20,10 @@ class mycarrier_rj extends CarrierModule
     const PREFIX = 'mycarrier_rj_mcj_';
     const FRONT_TABLE_NAME = _DB_PREFIX_ . 'mycarrier_rj_ijl';
 
+    const IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
+    const IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
+    const IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+
     public $id_carrier;
 
     protected $_hooks = array(
@@ -27,27 +31,42 @@ class mycarrier_rj extends CarrierModule
     );
 
     protected $_carriers = array(
-        // JNE
-        'OKE (Ongkos Kirim Ekonomis)' => 'mcj',
-        'REG (Reguler)'               => 'mcj2'
-        'YES (Yakin Esok Sampai)'     => 'mcj3',
-        'CTC (JNE City Courier)'      => 'mcj31',
-        'CTCYES (JNE City Courier)'   => 'mcj32',
+        /* JNE */
+        "JNE"  => array(
+            "rj_api_courier" => "jne",
+            "services"       => array(
+                'OKE (Ongkos Kirim Ekonomis)' => array("prefix" => 'mcj',   "rj_service" => "OKE"),
+                'REG (Reguler)'               => array("prefix" => 'mcj2',  "rj_service" => "REG"),
+                'YES (Yakin Esok Sampai)'     => array("prefix" => 'mcj3',  "rj_service" => "YES"),
+                'CTC (JNE City Courier)'      => array("prefix" => 'mcj31', "rj_service" => "CTC"),
+                'CTCYES (JNE City Courier)'   => array("prefix" => 'mcj32', "rj_service" => "CTCYES"),
+            ),
+        ),
 
-        // TIKI
-        'REG (Reguler Service)'    => 'mcj5',
-        'ECO (Economy Service)'    => 'mcj6',
-        'ONS (Over Night Service)' => 'mcj7',
-        // 'HDS (Holiday Service)' => 'mcj4',
+        /* TIKI */
+        "TIKI" => array(
+            "rj_api_courier" => "tiki",
+            "services"       => array(
+                'REG (Reguler Service)'    => array("prefix" => 'mcj5', "rj_service" => "REG"),
+                'ECO (Economy Service)'    => array("prefix" => 'mcj6', "rj_service" => "ECO"),
+                'ONS (Over Night Service)' => array("prefix" => 'mcj7', "rj_service" => "ONS"),
+                // 'HDS (Holiday Service)' => 'mcj4',
+            ),
+        ),
 
-        // POS Indonesia
-        'Paket Kilat Khusus'         => 'mcj9',
-        'Express Next Day Barang'    => 'mcj13',
-        //'Surat Kilat Khusus'       => 'mcj8',
-        //'Express Next Day Dokumen' => 'mcj10',
-        //'Paket Jumbo Ekonomi'      => 'mcj11',
-        //'Paketpos Dangerous Goods' => 'mcj12',
-        //'Paketpos Valuable Goods'  => 'mcj14',
+        /* POS Indonesia */
+        "POS"  => array(
+            "rj_api_courier" => "pos",
+            "services"       => array(
+                'Paket Kilat Khusus'         => array("prefix" => 'mcj9',  "rj_service" => "Paket Kilat Khusus"),
+                'Express Next Day Barang'    => array("prefix" => 'mcj13', "rj_service" => "Express Next Day Barang"),
+                //'Surat Kilat Khusus'       => 'mcj8',
+                //'Express Next Day Dokumen' => 'mcj10',
+                //'Paket Jumbo Ekonomi'      => 'mcj11',
+                //'Paketpos Dangerous Goods' => 'mcj12',
+                //'Paketpos Valuable Goods'  => 'mcj14',
+            ),
+        ),
     );
 
     public function __construct() {
@@ -84,6 +103,7 @@ class mycarrier_rj extends CarrierModule
             foreach ($this->_hooks as $hook) {
                 if (! $this->registerHook($hook)) { return FALSE; }
             }
+
             if (! $this->installDB())      { return FALSE; }
             if (! $this->createCarriers()) { return FALSE; }
 
@@ -131,105 +151,78 @@ class mycarrier_rj extends CarrierModule
         $query = "INSERT INTO `" . self::FRONT_TABLE_NAME . "` (api_key, from_city) VALUES ('xxxxxxxxxxxxxxxxxxxx', 'Jakarta Utara')";
         Db::getInstance()->Execute($query);
 
-        foreach ($this->_carriers as $key => $value) {
-            $carrier = new Carrier();
+        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
+            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
+                $service_prefix = $service_properties["prefix"];
 
-            if ($value == 'mcj'
-                OR $value == 'mcj2'
-                OR $value == 'mcj3'
-                OR $value == 'mcj31'
-                OR $value == 'mcj32') { $carrier->name = 'JNE'; }
+                $carrier = new Carrier();
 
-            if ($value=='mcj5'
-                OR $value=='mcj6'
-                OR $value=='mcj7'
-                /* OR $value=='mcj4' */) { $carrier->name = 'TIKI'; }
+                $carrier->name                  = $carrier_name;
+                $carrier->active                = TRUE;
+                $carrier->deleted               = 0;
+                $carrier->shipping_handling     = FALSE;
+                $carrier->range_behavior        = 0;
+                $carrier->shipping_external     = TRUE;
+                $carrier->is_module             = TRUE;
+                $carrier->external_module_name  = $this->name;
+                $carrier->need_range            = TRUE;
 
-            if ($value=='mcj9'
-                /* OR $value=='mcj10'
-                OR $value=='mcj11'
-                OR $value=='mcj12' */
-                OR $value=='mcj13'
-                /* OR $value=='mcj14'
-                OR $value=='mcj8 */) { $carrier->name = 'POS'; }
+                $carrier->delay[Configuration::get('PS_LANG_DEFAULT')] = $service_name;
 
-            $carrier->active = TRUE;
-            $carrier->deleted = 0;
-            $carrier->shipping_handling = FALSE;
-            $carrier->range_behavior = 0;
-            $carrier->delay[Configuration::get('PS_LANG_DEFAULT')] = $key;
-            $carrier->shipping_external = TRUE;
-            $carrier->is_module = TRUE;
-            $carrier->external_module_name = $this->name;
-            $carrier->need_range = TRUE;
+                if ($carrier->add()) {
+                    $groups = Group::getGroups(true);
+                    foreach ($groups as $group) {
+                        $query = "INSERT INTO " . _DB_PREFIX_ . "carrier_group (id_carrier, id_group)
+                                  VALUES ('" . $carrier->id . "', '" . $group['id_group'] . "')";
+                        Db::getInstance()->Execute($query);
+                    }
 
-            if ($carrier->add()) {
-                $groups = Group::getGroups(true);
-                foreach ($groups as $group) {
-                    $query = "INSERT INTO " . _DB_PREFIX_ . "carrier_group (id_carrier, id_group)
-                              VALUES ('" . $carrier->id . "', '" . $group['id_group'] . "')";
-                    Db::getInstance()->Execute($query);
+                    $rangePrice             = new RangePrice();
+                    $rangePrice->id_carrier = $carrier->id;
+                    $rangePrice->delimiter1 = 0.0;
+                    $rangePrice->delimiter2 = 100000000.0;
+                    $rangePrice->add();
+
+                    $rangeWeight             = new RangeWeight();
+                    $rangeWeight->id_carrier = $carrier->id;
+                    $rangeWeight->delimiter1 = 0.0;
+                    $rangeWeight->delimiter2 = 1000000.0;
+                    $rangeWeight->add();
+
+                    $zones = Zone::getZones(true);
+                    foreach ($zones as $zone) {
+                        $zone_id = $zone["id_zone"];
+
+                        $zone_queries = array(
+                            "INSERT INTO " . _DB_PREFIX_ . "carrier_zone (id_carrier, id_zone)
+                             VALUES ('" . $carrier->id . "', '" . $zone_id . "')",
+                            "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
+                             VALUES ('" . $carrier->id . "', '" . $rangePrice->id . "', '" . NULL . "', '" . $zone_id . "', '25')",
+                            "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
+                             VALUES ('" . $carrier->id . "', '" . NULL . "', '" . $rangeWeight->id . "', '" . $zone_id . "', '25')",
+                        );
+
+                        foreach ($zone_queries as $zone_query) { Db::getInstance()->Execute($zone_query) }
+                    }
+
+                    if ($carrier_name == "JNE") {
+                        copy(self::IMAGE_JNE,
+                             _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                    }
+
+                    if ($carrier_name == "TIKI") {
+                        copy(self::IMAGE_TIKI,
+                             _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                    }
+
+                    if ($carrier_name == "POS") {
+                        copy(self::IMAGE_POS,
+                             _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                    }
+
+                    Configuration::updateValue(self::PREFIX . $value, $carrier->id);
+                    Configuration::updateValue(self::PREFIX . $value . '_reference', $carrier->id);
                 }
-
-                $rangePrice = new RangePrice();
-                $rangePrice->id_carrier = $carrier->id;
-                $rangePrice->delimiter1 = 0.0;
-                $rangePrice->delimiter2 = 100000000.0;
-                $rangePrice->add();
-
-                $rangeWeight = new RangeWeight();
-                $rangeWeight->id_carrier = $carrier->id;
-                $rangeWeight->delimiter1 = 0.0;
-                $rangeWeight->delimiter2 = 1000000.0;
-                $rangeWeight->add();
-
-                $zones = Zone::getZones(true);
-                foreach ($zones as $zone) {
-                    $zone_id = $zone["id_zone"];
-
-                    $queryZone1 = "INSERT INTO " . _DB_PREFIX_ . "carrier_zone (id_carrier, id_zone)
-                                   VALUES ('" . $carrier->id . "', '" . $zone_id . "')";
-                    Db::getInstance()->Execute($queryZone1);
-
-                    $queryZone2 = "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                                   VALUES ('" . $carrier->id . "', '" . $rangePrice->id . "', '" . NULL . "', '" . $zone_id . "', '25')";
-                    Db::getInstance()->Execute($queryZone2);
-
-                    $queryZone3 = "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                                   VALUES ('" . $carrier->id . "', '" . NULL . "', '" . $rangeWeight->id . "', '" . $zone_id . "', '25')";
-                    Db::getInstance()->Execute($queryZone3);
-                }
-
-                if ($value == 'mcj'
-                    OR $value == 'mcj2'
-                    OR $value == 'mcj3'
-                    OR $value == 'mcj31'
-                    OR $value == 'mcj32') {
-                    copy(dirname(__FILE__) . '/views/img/carrier.jpg',
-                         _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
-                }
-
-                if ($value=='mcj5'
-                    OR $value=='mcj6'
-                    OR $value=='mcj7'
-                    /* OR $value=='mcj4' */) {
-                    copy(dirname(__FILE__) . '/views/img/carrier2.jpg',
-                         _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
-                }
-
-                if ($value=='mcj9'
-                    /* OR $value=='mcj10'
-                    OR $value=='mcj11'
-                    OR $value=='mcj12' */
-                    OR $value=='mcj13'
-                    /* OR $value=='mcj14'
-                    OR $value=='mcj8 */) {
-                    copy(dirname(__FILE__) . '/views/img/carrier3.jpg',
-                         _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
-                }
-
-                Configuration::updateValue(self::PREFIX . $value, $carrier->id);
-                Configuration::updateValue(self::PREFIX . $value . '_reference', $carrier->id);
             }
         }
 
@@ -237,10 +230,14 @@ class mycarrier_rj extends CarrierModule
     }
 
     protected function deleteCarriers() {
-        foreach ($this->_carriers as $current_carrier) {
-            $tmp_carrier_id = Configuration::get(self::PREFIX . $current_carrier);
-            $carrier = new Carrier($tmp_carrier_id);
-            $carrier->delete();
+        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
+            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
+                $service_prefix = $service_properties["prefix"];
+
+                $tmp_carrier_id = Configuration::get(self::PREFIX . $service_prefix);
+                $carrier = new Carrier($tmp_carrier_id);
+                $carrier->delete();
+            }
         }
 
         return TRUE;
@@ -377,7 +374,7 @@ class mycarrier_rj extends CarrierModule
             CURLOPT_URL            => "https://api.rajaongkir.com/starter/cost",
             CURLOPT_RETURNTRANSFER => TRUE,
             CURLOPT_ENCODING       => "",
-            CURLOPT_MAXREDIRS      => 3,
+            CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_POST           => TRUE,
@@ -394,144 +391,89 @@ class mycarrier_rj extends CarrierModule
     }
 
     public function getOrderShippingCost($params, $shipping_cost) {
-        // RajaOngkir API returns in gram, while front-end input is in kilogram
+        $carrier_name = NULL;
+        $carrier_flag = NULL;
+        $service_name = NULL;
+        $service_flag = NULL;
+        $originCity = NULL;
+        $destinationCity = NULL;
+
+        foreach ($this->_carriers as $l_carrier_name => $l_carrier_properties) {
+            foreach ($l_carrier_properties["services"] as $l_service_name => $l_service_properties) {
+                $service_prefix = $l_service_properties["prefix"];
+
+                if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . "{$service_prefix}_reference"))) {
+                    $carrier_flag = $l_service_properties["rj_api_courier"];
+                    $carrier_name = $l_carrier_name;
+                    $service_name = $l_service_name;
+                    $service_flag = $l_service_properties["rj_service"];
+
+                    // we found our data, just break.
+                    break;
+                }
+            }
+            if (! is_null($service_flag)) { break; /* domino effect from inner foreach */ }
+        }
+
+        if (is_null($service_flag)) { return FALSE; } // we don't have service and carrier data here.
+
+        // question is, do we need to check other flags, i.e. $carrier_flag, etc
+
+        // RajaOngkir API returns in grams, while front-end input is in kilograms
+        // so we're now processing in grams.
+        // I do sound like a drug dealer here, grams grams grams...
         $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000.0;
+        $weight = max(($weight * 1.0), 1000.00); // minimum weight is 1kg
 
         $sqlMyCarrier = 'SELECT * FROM `' . self::FRONT_TABLE_NAME . '` WHERE id_mycarrier_rj_ijl = 1';
+        $rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier);
 
-        // this two line should be detached, but that's what I got from code.
-        if ($rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier)) {
-            $address = new Address($this->context->cart->id_address_delivery);
-        }
+        $address = new Address($this->context->cart->id_address_delivery);
 
         $from = $rowMyCarrier['from_city'];
         $to = $address->city;
 
-        $weight = max(($weight * 1.0), 1000.00); // weight in RajaOngkir API is in grams, and minimum weight is 1kg.
-
         $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);
         $responseCity = json_decode($responseCity);
 
-        $fromCity = NULL;
-        $toCity = NULL;
+        $originCity = NULL;
+        $destinationCity = NULL;
 
         foreach ($responseCity->rajaongkir->results as $key) {
-            if ($key->city_name == $from) { $fromCity = $key->city_id; }
-            if ($key->city_name == $to)   { $toCity = $key->city_id; }
+            if ($key->city_name == $from) { $originCity = $key->city_id; }
+            if ($key->city_name == $to)   { $destinationCity = $key->city_id; }
 
-            if (! is_null($fromCity) AND ! is_null($toCity)) { break; }
+            if (! is_null($originCity) AND ! is_null($destinationCity)) { break; }
         }
 
-        if (! is_null($fromCity) && ! is_null($toCity)) {
-            $cache_jne_id = 'ShoppingCost::jne::'.$fromCity.'_'.$toCity.'_'.$weight;
-            $cache_tiki_id = 'ShoppingCost::tiki::'.$fromCity.'_'.$toCity.'_'.$weight;
-            $cache_pos_id = 'ShoppingCost::pos::'.$fromCity.'_'.$toCity.'_'.$weight;
+        if (is_null($originCity) || is_null($destinationCity)) { return FALSE; } // cannot calculate if there's no origin/destination.
 
-            /* JNE */
-            if (! Cache::isStored($cache_jne_id)) {
-                $jne_roa = $this->checkRajaOngkirApi($fromCity, $toCity, $weight, "jne");
+        // we got origin and destination.
+        $cache_id = "ShoppingCost::{$carrier_flag}::{$originCity}_{$destinationCity}_{$weight}";
+        if (! Cache::is_stored($cache_id)) {
+            $roa = $this->checkRajaOngkirApi($originCity, $destinationCity, $weight, $carrier_flag);
+            $response = $roa[0];
+            $error_response = $roa[1];
 
-                $responseCostJne = $jne_roa[0];
-                $error_response = $jne_roa[1];
-
-                if ($error_response) {
-                    // do nothing, as in current module error.
-                } else {
-                    Cache::store($cache_jne_id, $responseCostJne);
-                }
+            if ($error_response) {
+                // bad things happened, and we have no shipping cost
+                // better we throw something here...
+                return FALSE;
             } else {
-                $responseCostJne = Cache::retrieve($cache_jne_id);
+                Cache::store($cache_id, $response);
             }
-
-            /* TIKI */
-            if (! Cache::isStored($cache_tiki_id)) {
-                $tiki_roa = $this->checkRajaOngkirApi($fromCity, $toCity, $weight, "tiki");
-
-                $responseCostTiki = $tiki_roa[0];
-                $error_response = $tiki_roa[1];
-
-                if ($error_response) {
-                    // do nothing, as in current module error.
-                } else {
-                    Cache::store($cache_tiki_id, $responseCostTiki);
-                }
-            } else {
-                $responseCostTiki = Cache::retrieve($cache_tiki_id);
-            }
-
-            /* POS */
-            if (! Cache::isStored($cache_pos_id)) {
-                $pos_roa = $this->checkRajaOngkirApi($fromCity, $toCity, $weight, "pos");
-
-                $responseCostPos = $pos_roa[0];
-                $error_response = $pos_roa[1];
-
-                if ($error_response) {
-                    // do nothing, as in current module error.
-                } else {
-                    Cache::store($cache_pos_id, $responseCostPos);
-                }
-            } else {
-                $responseCostPos = Cache::retrieve($cache_pos_id);
-            }
-
-            /* Parse API result values */
-            $ongkirOkeJne = FALSE;
-            $ongkirRegJne = FALSE;
-            $ongkirYesJne = FALSE;
-            $ongkirCtcJne = FALSE;
-            $ongkirCtcYesJne = FALSE;
-
-            $responseCostJne = json_decode($responseCostJne);
-            if (isset($responseCostJne->rajaongkir->results[0]->costs[0]->cost[0]->value)) {
-                foreach ($responseCostJne->rajaongkir->results[0]->costs as $value) {
-                    if ($value->service == 'OKE')    { $ongkirOkeJne    = $value->cost[0]->value; }
-                    if ($value->service == 'REG')    { $ongkirRegJne    = $value->cost[0]->value; }
-                    if ($value->service == 'YES')    { $ongkirYesJne    = $value->cost[0]->value; }
-                    if ($value->service == 'CTC')    { $ongkirCtcJne    = $value->cost[0]->value; }
-                    if ($value->service == 'CTCYES') { $ongkirCtcYesJne = $value->cost[0]->value; }
-                }
-            }
-
-            $ongkirRegTiki = FALSE;
-            $ongkirEcoTiki = FALSE;
-            $ongkirOnsTiki = FALSE;
-
-            $responseCostTiki = json_decode($responseCostTiki);
-            if (isset($responseCostTiki->rajaongkir->results[0]->costs[0]->cost[0]->value)) {
-                foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
-                    if ($value->service == 'REG') { $ongkirRegTiki = $value->cost[0]->value; }
-                    if ($value->service == 'ECO') { $ongkirEcoTiki = $value->cost[0]->value; }
-                    if ($value->service == 'ONS') { $ongkirOnsTiki = $value->cost[0]->value; }
-                }
-            }
-
-            $ongkirPkkPos = FALSE;
-            $ongkirEndPos = FALSE;
-
-            $responseCostPos = json_decode($responseCostPos);
-            if (isset($responseCostPos->rajaongkir->results[0]->costs[0]->cost[0]->value)) {
-                foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
-                    if ($value->service == 'Paket Kilat Khusus')      { $ongkirPkkPos = $value->cost[0]->value; }
-                    if ($value->service == 'Express Next Day Barang') { $ongkirEndPos = $value->cost[0]->value; }
-                }
-            }
-
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj_reference')))   { return $ongkirOkeJne; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj2_reference')))  { return $ongkirRegJne; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj3_reference')))  { return $ongkirYesJne; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj31_reference'))) { return $ongkirCtcJne; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj32_reference'))) { return $ongkirCtcYesJne; }
-
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj5_reference'))) { return $ongkirRegTiki; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj6_reference'))) { return $ongkirEcoTiki; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj7_reference'))) { return $ongkirOnsTiki; }
-
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj9_reference')))  { return $ongkirPkkPos; }
-            if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . 'mcj13_reference'))) { return $ongkirEndPos; }
-
-            return FALSE;
+        } else {
+            $response = Cache::retrieve($cache_id);
         }
+
+        // we got API response in $response, now we need to compare to our $service_flag to get shipping cost.
+        if (isset($response->rajaongkir->results[0]->costs[0]->cost[0]->value)) { // just to validate our response
+            foreach ($response->rajaongkir->results[0]->costs as $value) {
+                if ($value->service == $service_flag) { return $value->cost[0]->value; }
+            }
+        }
+
+        return FALSE;
     }
 
     public function getOrderShippingCostExternal($params) {
@@ -539,9 +481,14 @@ class mycarrier_rj extends CarrierModule
     }
 
     public function hookActionCarrierUpdate($params) {
-        foreach ($this->_carriers as $carrier) {
-            if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . "{$carrier}_reference")) {
-                Configuration::updateValue(self::PREFIX . "{$carrier}", $params['carrier']->id);
+        # loops make things easier.
+        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
+            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
+                $service_prefix = $service_properties["prefix"];
+
+                if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . "{$service_prefix}_reference")) {
+                    Configuration::updateValue(self::PREFIX . "{$service_prefix}", $params['carrier']->id);
+                }
             }
         }
     }
