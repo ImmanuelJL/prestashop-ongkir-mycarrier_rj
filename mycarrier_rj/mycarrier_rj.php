@@ -312,7 +312,7 @@ class mycarrier_rj extends CarrierModule
                 array(
                     'type'     => 'text',
                     'label'    => $this->l('API Key:'),
-                    'desc'     => $this->l("Raja Ongkir API Key (see https://rajaongkir.com/dokumentasi#aturan-penggunaan).")
+                    'desc'     => $this->l("Raja Ongkir API Key (see https://rajaongkir.com/dokumentasi#aturan-penggunaan)."),
                     'name'     => 'myc_api',
                     'size'     => 50,
                     'required' => true
