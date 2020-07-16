@@ -18,11 +18,12 @@ if (!defined('_PS_VERSION_')) {
 class mycarrier_rj extends CarrierModule
 {
     const PREFIX = 'mycarrier_rj_mcj_';
-    const FRONT_TABLE_NAME = _DB_PREFIX_ . 'mycarrier_rj_ijl';
 
-    protected $_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
-    protected $_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
-    protected $_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+    protected $_FRONT_TABLE_NAME;
+
+    protected $_IMAGE_JNE;
+    protected $_IMAGE_TIKI;
+    protected $_IMAGE_POS;
 
     public $id_carrier;
 
@@ -79,6 +80,12 @@ class mycarrier_rj extends CarrierModule
 
         parent::__construct();
 
+        $this->_FRONT_TABLE_NAME = _DB_PREFIX_ . 'mycarrier_rj_ijl';
+
+        $this->_IMAGE_JNE  = dirname(__FILE__) . '/views/img/carrier.jpg';
+        $this->_IMAGE_TIKI = dirname(__FILE__) . '/views/img/carrier2.jpg';
+        $this->_IMAGE_POS  = dirname(__FILE__) . '/views/img/carrier3.jpg';
+
         $this->displayName = $this->l('My Carrier RJ');
         $this->description = $this->l('My Carrier RJ, hitung ongkir jasa pengiriman barang'
                                       . ' atau ekspedisi via Jalur Nugraha Ekakurir (JNE), '
@@ -119,7 +126,7 @@ class mycarrier_rj extends CarrierModule
 
     protected function uninstallDB() {
         $queries = array(
-            'DROP TABLE IF EXISTS `' . self::FRONT_TABLE_NAME . '`',
+            'DROP TABLE IF EXISTS `' . $this->_FRONT_TABLE_NAME . '`',
         );
 
         foreach ($queries as $query) {
@@ -131,7 +138,7 @@ class mycarrier_rj extends CarrierModule
 
     protected function installDB() {
         $queries = array(
-            'CREATE TABLE IF NOT EXISTS `' . self::FRONT_TABLE_NAME . '` (
+            'CREATE TABLE IF NOT EXISTS `' . $this->_FRONT_TABLE_NAME . '` (
                 `id_mycarrier_rj_ijl` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT,
                 `api_key` TEXT,
                 `from_city` TEXT,
@@ -148,7 +155,7 @@ class mycarrier_rj extends CarrierModule
     }
 
     protected function createCarriers() {
-        $query = "INSERT INTO `" . self::FRONT_TABLE_NAME . "` (api_key, from_city) VALUES ('xxxxxxxxxxxxxxxxxxxx', 'Jakarta Utara')";
+        $query = "INSERT INTO `" . $this->_FRONT_TABLE_NAME . "` (api_key, from_city) VALUES ('xxxxxxxxxxxxxxxxxxxx', 'Jakarta Utara')";
         Db::getInstance()->Execute($query);
 
         foreach ($this->_carriers as $carrier_name => $carrier_properties) {
@@ -279,7 +286,7 @@ class mycarrier_rj extends CarrierModule
                 Configuration::updateValue('myc_api', $api_key);
                 Configuration::updateValue('myc_city', $origin_city);
 
-                $query = "UPDATE `" . self::FRONT_TABLE_NAME . "`
+                $query = "UPDATE `" . $this->_FRONT_TABLE_NAME . "`
                           SET api_key='" . $api_key . "', from_city='" . $origin_city . "'
                           WHERE id_mycarrier_rj_ijl = 1";
                 Db::getInstance()->Execute($query);
@@ -425,7 +432,7 @@ class mycarrier_rj extends CarrierModule
         $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000.0;
         $weight = max(($weight * 1.0), 1000.00); // minimum weight is 1kg
 
-        $sqlMyCarrier = 'SELECT * FROM `' . self::FRONT_TABLE_NAME . '` WHERE id_mycarrier_rj_ijl = 1';
+        $sqlMyCarrier = 'SELECT * FROM `' . $this->_FRONT_TABLE_NAME . '` WHERE id_mycarrier_rj_ijl = 1';
         $rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier);
 
         $address = new Address($this->context->cart->id_address_delivery);
