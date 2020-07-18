@@ -250,8 +250,10 @@ class mycarrier_rj extends CarrierModule {
                 if ($carrier->add()) {
                     $groups = Group::getGroups(true);
                     foreach ($groups as $group) {
+                        $group_id = $group["id_group"];
+
                         $query = "INSERT INTO " . _DB_PREFIX_ . "carrier_group (id_carrier, id_group)
-                                  VALUES ('" . $carrier->id . "', '" . $group["id_group"] . "')";
+                                  VALUES ('{$carrier->id}', '{$group_id}')";
                         Db::getInstance()->Execute($query);
                     }
 
@@ -273,30 +275,32 @@ class mycarrier_rj extends CarrierModule {
 
                         $zone_queries = array(
                             "INSERT INTO " . _DB_PREFIX_ . "carrier_zone (id_carrier, id_zone)
-                             VALUES ('" . $carrier->id . "', '" . $zone_id . "')",
+                             VALUES ('{$carrier->id}', '{$zone_id}')",
                             "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                             VALUES ('" . $carrier->id . "', '" . $rangePrice->id . "', '" . NULL . "', '" . $zone_id . "', '25')",
+                             VALUES ('{$carrier->id}', '{$rangePrice->id}', '" . NULL . "', '{$zone_id}', '25')",
                             "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                             VALUES ('" . $carrier->id . "', '" . NULL . "', '" . $rangeWeight->id . "', '" . $zone_id . "', '25')",
+                             VALUES ('{$carrier->id}', '" . NULL . "', '{$rangeWeight->id}', '{$zone_id}', '25')",
                         );
 
                         foreach ($zone_queries as $zone_query) { Db::getInstance()->Execute($zone_query); }
                     }
 
+                    $carrier_id = (int) $carrier->id;
+                    
                     if ($carrier_name == "JNE") {
-                        copy($this->_IMAGE_JNE, _PS_SHIP_IMG_DIR_ . "/" . (int) $carrier->id . ".jpg");
+                        copy($this->_IMAGE_JNE, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
                     }
 
                     if ($carrier_name == "TIKI") {
-                        copy($this->$_IMAGE_TIKI, _PS_SHIP_IMG_DIR_ . "/" . (int) $carrier->id . ".jpg");
+                        copy($this->$_IMAGE_TIKI, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
                     }
 
                     if ($carrier_name == "POS") {
-                        copy($this->$_IMAGE_POS, _PS_SHIP_IMG_DIR_ . "/" . (int) $carrier->id . ".jpg");
+                        copy($this->$_IMAGE_POS, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
                     }
 
                     Configuration::updateValue(self::PREFIX . $value, $carrier->id);
-                    Configuration::updateValue(self::PREFIX . $value . "_reference", $carrier->id);
+                    Configuration::updateValue(self::PREFIX . "{$value}_reference", $carrier->id);
                 }
             }
         }
@@ -453,7 +457,7 @@ class mycarrier_rj extends CarrierModule {
         $helper->module = $this;
         $helper->name_controller = $this->name;
         $helper->token = Tools::getAdminTokenLite("AdminModules");
-        $helper->currentIndex = AdminController::$currentIndex . "&configure=" . $this->name;
+        $helper->currentIndex = AdminController::$currentIndex . "&configure={$this->name}";
 
         $helper->default_form_language = $default_lang;
         $helper->allow_employee_form_lang = $default_lang;
@@ -465,7 +469,7 @@ class mycarrier_rj extends CarrierModule {
         $helper->toolbar_btn = array(
             "save" => array(
                 "desc" => $this->l("Save"),
-                "href" => AdminController::$currentIndex . "&configure=" . $this->name . "&save" . $this->name . "&token=" . Tools::getAdminTokenLite("AdminModules"),
+                "href" => AdminController::$currentIndex . "&configure={$this->name}&save{$this->name}&token=" . Tools::getAdminTokenLite("AdminModules"),
             ),
             "back" => array(
                 "desc" => $this->l("Back to list"),
