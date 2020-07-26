@@ -1,11 +1,11 @@
 <?php
 /*                  NOTE                  *
 *******************************************/
-/* Cek http://immanueljl.blogspot.co.id untuk informasi lebih lanjut.
+/* Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
 * Dukung dengan like dan share :)
 * ****************************************************
 * @author  Immanuel Julianto Lasmana <immanueljl44@gmail.com>
-* @site    http://immanueljl.blogspot.co.id
+* @site    https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
 * @copyright  Copyright (c)2017 
 * @license    FREE LICENSE SOFTWARE (BOLEH DIPAKAI UNTUK KEPERLUAN APAPUN TANPA MERUBAH COPYRIGHT NOTICE)
 */
@@ -54,7 +54,7 @@ class mycarrier_rj extends CarrierModule
         parent::__construct();
 
         $this->displayName = $this->l('My Carrier RJ');
-        $this->description = $this->l('My Carrier RJ, hitung ongkir jasa pengiriman barang atau ekspedisi via Jalur Nugraha Ekakurir (JNE), TIKI (Citra Van Titipan Kilat), POS (POS Indonesia). Menggunakan API dari https://rajaongkir.com. Module untuk prestashop GRATIS buatan Immanuel Julianto Lasmana, untuk dokumentasi cek http://immanueljl.blogspot.co.id');
+        $this->description = $this->l('My Carrier RJ, hitung ongkir jasa pengiriman barang atau ekspedisi via Jalur Nugraha Ekakurir (JNE), TIKI (Citra Van Titipan Kilat), POS (POS Indonesia). Menggunakan API dari https://rajaongkir.com. Module untuk prestashop GRATIS buatan Immanuel Julianto Lasmana, untuk dokumentasi cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/');
 
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
  
@@ -189,11 +189,11 @@ class mycarrier_rj extends CarrierModule
                         copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
                     if(/*$value=='mcj4' OR */$value=='mcj5' OR $value=='mcj6' OR $value=='mcj7'){
-                        copy(dirname(__FILE__) . '/views/img/carrier2.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                        copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
                     if(/*$value=='mcj8' OR */$value=='mcj9' OR /*$value=='mcj10' OR $value=='mcj11'
                          OR $value=='mcj12' OR */$value=='mcj13'/* OR $value=='mcj14'*/){
-                        copy(dirname(__FILE__) . '/views/img/carrier3.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                        copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }                    
 
                     Configuration::updateValue(self::PREFIX . $value, $carrier->id);
