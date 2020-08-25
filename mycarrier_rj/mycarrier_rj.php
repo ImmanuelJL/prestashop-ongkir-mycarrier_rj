@@ -3,11 +3,11 @@
  * mycarrier_rj.php
  * File module utama untuk install, uninstall, dan proses penghitungan ongkir via API Raja Ongkir
  *
- * Cek http://immanueljl.blogspot.co.id untuk informasi lebih lanjut.
+ * Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
  * Dukung dengan like dan share :)
  *
  * @author      Immanuel Julianto Lasmana <immanueljl44@gmail.com>
- * @link        http://immanueljl.blogspot.co.id
+ * @link        https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
  * @copyright   2017 Immanuel Julianto Lasmana et al.
  * @license     GPL-3.0 (https://opensource.org/licenses/GPL-3.0)
  */
@@ -154,7 +154,7 @@ class mycarrier_rj extends CarrierModule {
                                       . "Menggunakan API dari https://rajaongkir.com. Module "
                                       . "untuk prestashop GRATIS buatan Immanuel Julianto "
                                       . "Lasmana, untuk dokumentasi cek "
-                                      . "http://immanueljl.blogspot.co.id");
+                                      . "https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/");
 
         $this->confirmUninstall = $this->l("Are you sure you want to uninstall {$this->displayName} module?");
 
