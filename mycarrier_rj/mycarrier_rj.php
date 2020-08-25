@@ -1,188 +1,89 @@
 <?php
-/**
- * mycarrier_rj.php
- * File module utama untuk install, uninstall, dan proses penghitungan ongkir via API Raja Ongkir
- *
- * Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
- * Dukung dengan like dan share :)
- *
- * @author      Immanuel Julianto Lasmana <immanueljl44@gmail.com>
- * @link        https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
- * @copyright   2017 Immanuel Julianto Lasmana et al.
- * @license     GPL-3.0 (https://opensource.org/licenses/GPL-3.0)
- */
+/*                  NOTE                  *
+*******************************************/
+/* Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
+* Dukung dengan like dan share :)
+* ****************************************************
+* @author  Immanuel Julianto Lasmana <immanueljl44@gmail.com>
+* @site    https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
+* @copyright  Copyright (c)2017 
+* @license    FREE LICENSE SOFTWARE (BOLEH DIPAKAI UNTUK KEPERLUAN APAPUN TANPA MERUBAH COPYRIGHT NOTICE)
+*/
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+/*THIS CLASS NAME SHOULD SAME WITH FOLDER/MODULE NAME*/
+class mycarrier_rj extends CarrierModule
+{
+    const PREFIX = 'mycarrier_rj_mcj_';
 
-if (!defined("_PS_VERSION_")) { exit; }
-
-class mycarrier_rj extends CarrierModule {
-    /**
-     * PrestaShop Configuration prefix
-     */
-    const PREFIX = "mycarrier_rj_mcj_";
-
-    /**
-     * Configuration reference to RajaOngkir API key.
-     */
-    const CFGN_API_KEY = "myc_api";
-
-    /**
-     * Configuration reference to sender origin city.
-     */
-    const CFGN_ORIGIN_CITY = "myc_city";
-
-    /**
-     * Module's custom CustomerAddressFormat file.
-     * @var string
-     */
-    protected $_CAF_FILE;
-
-    /**
-     * PrestaShop's custom CustomerAddressFormat file.
-     * @var string
-     */
-    protected $_CAF_TARGET;
-
-    /**
-     * Module configuration table name.
-     * @var string
-     */
-    protected $_FRONT_TABLE_NAME;
-
-    /**
-     * Path to carrier images.
-     * @var string
-     */
-    protected $_IMAGE_JNE;
-    protected $_IMAGE_TIKI;
-    protected $_IMAGE_POS;
-
-    /**
-     * Module log file path.
-     * @var string
-     */
-    protected $_LOG_PATH;
-
-    /**
-     * Module log file prefix.
-     * @var string
-     */
-    protected $_LOG_PREFIX;
-
-    /**
-     * CarrierModule ID.
-     * @var int
-     */
     public $id_carrier;
 
-    /**
-     * PrestaShop available module hooks.
-     * @var array
-     */
-    protected $_hooks = array(
-        "actionCarrierUpdate",
+    protected $_hooks = array(        
+        'actionCarrierUpdate',
     );
 
-    /**
-     * Available carriers and each carrier services and properties.
-     * @var array
-     */
-    protected $_carriers = array(
-        /* JNE */
-        "JNE"  => array(
-            "rj_api_courier" => "jne",
-            "services"       => array(
-                "OKE (Ongkos Kirim Ekonomis)" => array("prefix" => "mcj",   "rj_service" => "OKE"),
-                "REG (Reguler)"               => array("prefix" => "mcj2",  "rj_service" => "REG"),
-                "YES (Yakin Esok Sampai)"     => array("prefix" => "mcj3",  "rj_service" => "YES"),
-                "CTC (JNE City Courier)"      => array("prefix" => "mcj31", "rj_service" => "CTC"),
-                "CTCYES (JNE City Courier)"   => array("prefix" => "mcj32", "rj_service" => "CTCYES"),
-            ),
-        ),
-
-        /* TIKI */
-        "TIKI" => array(
-            "rj_api_courier" => "tiki",
-            "services"       => array(
-                "REG (Reguler Service)"    => array("prefix" => "mcj5", "rj_service" => "REG"),
-                "ECO (Economy Service)"    => array("prefix" => "mcj6", "rj_service" => "ECO"),
-                "ONS (Over Night Service)" => array("prefix" => "mcj7", "rj_service" => "ONS"),
-                // "HDS (Holiday Service)" => "mcj4",
-            ),
-        ),
-
-        /* POS Indonesia */
-        "POS"  => array(
-            "rj_api_courier" => "pos",
-            "services"       => array(
-                "Paket Kilat Khusus"         => array("prefix" => "mcj9",  "rj_service" => "Paket Kilat Khusus"),
-                "Express Next Day Barang"    => array("prefix" => "mcj13", "rj_service" => "Express Next Day Barang"),
-                //"Surat Kilat Khusus"       => "mcj8",
-                //"Express Next Day Dokumen" => "mcj10",
-                //"Paket Jumbo Ekonomi"      => "mcj11",
-                //"Paketpos Dangerous Goods" => "mcj12",
-                //"Paketpos Valuable Goods"  => "mcj14",
-            ),
-        ),
+    protected $_carriers = array( 
+        'OKE (Ongkos Kirim Ekonomis)' => 'mcj',//PUT CARRIER NAME
+        'REG (Reguler)' => 'mcj2',//PUT CARRIER NAME
+        'YES (Yakin Esok Sampai)' => 'mcj3',//PUT CARRIER NAME
+        'CTC (JNE City Courier)' => 'mcj31',//PUT CARRIER NAME
+        'CTCYES (JNE City Courier)' => 'mcj32',//PUT CARRIER NAME
+        //'HDS (Holiday Service)' => 'mcj4',//PUT CARRIER NAME
+        'REG (Reguler Service)' => 'mcj5',//PUT CARRIER NAME
+        'ECO (Economy Service)' => 'mcj6',//PUT CARRIER NAME
+        'ONS (Over Night Service)' => 'mcj7',//PUT CARRIER NAME
+        //'Surat Kilat Khusus' => 'mcj8',//PUT CARRIER NAME
+        'Paket Kilat Khusus' => 'mcj9',//PUT CARRIER NAME
+        //'Express Next Day Dokumen' => 'mcj10',//PUT CARRIER NAME
+        //'Paket Jumbo Ekonomi' => 'mcj11',//PUT CARRIER NAME
+        //'Paketpos Dangerous Goods' => 'mcj12',//PUT CARRIER NAME
+        'Express Next Day Barang' => 'mcj13',//PUT CARRIER NAME
+        //'Paketpos Valuable Goods' => 'mcj14',//PUT CARRIER NAME
     );
 
-    public function __construct() {
-        $this->name       = "mycarrier_rj";
-        $this->tab        = "shipping_logistics";
-        $this->version    = "1.1";
-        $this->author     = "Immanuel Julianto Lasmana";
-        $this->bootstrap  = TRUE;
-        $this->module_key = "";
+    public function __construct()
+    {
+        $this->name = 'mycarrier_rj';//MOLDULE NAME
+        $this->tab = 'shipping_logistics';//TAB MODULE
+        $this->version = '1.0';//MODULE VERSION
+        $this->author = 'Immanuel Julianto Lasmana';//CREATOR
+        $this->bootstrap = TRUE;
+        $this->module_key = '';
 
         parent::__construct();
 
-        $this->_FRONT_TABLE_NAME = _DB_PREFIX_ . "mycarrier_rj_ijl";
+        $this->displayName = $this->l('My Carrier RJ');
+        $this->description = $this->l('My Carrier RJ, hitung ongkir jasa pengiriman barang atau ekspedisi via Jalur Nugraha Ekakurir (JNE), TIKI (Citra Van Titipan Kilat), POS (POS Indonesia). Menggunakan API dari https://rajaongkir.com. Module untuk prestashop GRATIS buatan Immanuel Julianto Lasmana, untuk dokumentasi cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/');
 
-        $this->_IMAGE_JNE  = dirname(__FILE__) . "/views/img/carrier.jpg";
-        $this->_IMAGE_TIKI = dirname(__FILE__) . "/views/img/carrier2.jpg";
-        $this->_IMAGE_POS  = dirname(__FILE__) . "/views/img/carrier3.jpg";
+        $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
+ 
+        if (!Configuration::get('myc_api'))      
+          $this->warning = $this->l('No API Provided');
 
-        $this->_LOG_PATH   = _PS_ROOT_DIR_ . "/app/logs/";
-        $this->_LOG_PREFIX = "mycarrier-rj";
-
-        $this->_CAF_FILE = dirname(__FILE__) . "/controllers/front/CustomerAddressFormatter.php";
-        $this->_CAF_TARGET = _PS_OVERRIDE_DIR_."/classes/form/CustomerAddressFormatter.php";
-
-        $this->displayName = $this->l("My Carrier RJ");
-        $this->description = $this->l("My Carrier RJ, hitung ongkir jasa pengiriman barang "
-                                      . "atau ekspedisi via Jalur Nugraha Ekakurir (JNE), "
-                                      . "TIKI (Citra Van Titipan Kilat), POS (POS Indonesia). "
-                                      . "Menggunakan API dari https://rajaongkir.com. Module "
-                                      . "untuk prestashop GRATIS buatan Immanuel Julianto "
-                                      . "Lasmana, untuk dokumentasi cek "
-                                      . "https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/");
-
-        $this->confirmUninstall = $this->l("Are you sure you want to uninstall {$this->displayName} module?");
-
-        if (! Configuration::get(self::CFGN_API_KEY)) {
-            $this->warning = $this->l("No RajaOngkir API key provided.");
-        }
-
-        if (! Configuration::get(self::CFGN_ORIGIN_CITY)) {
-            $this->warning = $this->l("No origin city provided.");
-        }
+        if (!Configuration::get('myc_city'))      
+          $this->warning = $this->l('No City From Provided');
     }
 
-    /**
-     * Install this module, extends Module::install().
-     * @see Module::install()
-     * @return bool
-     */
-    public function install() {
-        if (parent::install()) {
+    public function install()
+    {
+        if (parent::install()) {//INSTALL HOOK
             foreach ($this->_hooks as $hook) {
-                if (! $this->registerHook($hook)) { return FALSE; }
+                if (!$this->registerHook($hook)) {
+                    return FALSE;
+                }
             }
 
-            if (! $this->installDB())      { return FALSE; }
-            if (! $this->createCarriers()) { return FALSE; }
+            if (!$this->installDB()) {//INSTALL DATABASE
+                return FALSE;
+            }
 
-            // Set our custom CustomerAddressFormatter
-            copy($this->_CAF_FILE, $this->_CAF_TARGET);
+            if (!$this->createCarriers()) {//INSTAL CARRIER
+                return FALSE;
+            }
+
+            // COPY CustomerAddressFormatter INTO OVERRIDE CLASS
+            copy(dirname(__FILE__).'/controllers/front/CustomerAddressFormatter.php', _PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
 
             return TRUE;
         }
@@ -190,139 +91,149 @@ class mycarrier_rj extends CarrierModule {
         return FALSE;
     }
 
-    /**
-     * Installs module database.
-     * @see mycarrier_rj::install()
-     * @return bool
-     */
-    protected function installDB() {
-        $mysql_engine = _MYSQL_ENGINE_;
-        $queries = array(
-            // TODO: This module stores its configurations in two ways: 
-            //       PrestaShop Configuration and MySQL database.
-            //       Probably we can let PrestaShop stores module 
-            //       configuration so we don't need to manage them.
-            "CREATE TABLE IF NOT EXISTS `{$this->_FRONT_TABLE_NAME}` (
-                `id_mycarrier_rj_ijl` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT,
-                `api_key` TEXT,
-                `from_city` TEXT,
-                `date_upd` DATETIME NULL,
-                PRIMARY KEY (`id_mycarrier_rj_ijl`)
-            ) ENGINE = {$mysql_engine} DEFAULT CHARSET = utf8",
-        );
+    protected function uninstallDB()
+    {
+        $sql = array();
 
-        foreach ($queries as $query) {
-            if (! Db::getInstance()->Execute($query)) { return FALSE; }
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'mycarrier_rj_ijl`';
+
+        foreach ($sql as $_sql) {
+            if (!Db::getInstance()->Execute($_sql)) {
+                return FALSE;
+            }
         }
 
         return TRUE;
     }
 
-    /**
-     * Imports module supported carriers and carrier services to 
-     * PrestaShop's configuration.
-     * @see mycarrier_rj::install()
-     * @return bool
-     */
-    protected function createCarriers() {
-        $query = "INSERT INTO `{$this->_FRONT_TABLE_NAME}` (api_key, from_city)
-                  VALUES ('xxxxxxxxxxxxxxxxxxxx', 'Jakarta Utara')";
+    protected function installDB()
+    {
+        $sql = array();
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mycarrier_rj_ijl` (
+            `id_mycarrier_rj_ijl` INT( 11 ) UNSIGNED NOT NULL AUTO_INCREMENT,
+            `api_key` TEXT,
+            `from_city` TEXT,
+            `date_upd` DATETIME NULL,
+            PRIMARY KEY (`id_mycarrier_rj_ijl`)
+        ) ENGINE = ' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8';
+
+        foreach ($sql as $_sql) {
+            if (!Db::getInstance()->Execute($_sql)) {
+                return FALSE;
+            }
+        }        
+
+        return TRUE;
+    }
+
+    protected function createCarriers()
+    {
+        //INSERT DATABASE 
+        $query = "INSERT INTO "._DB_PREFIX_."mycarrier_rj_ijl (api_key, from_city) VALUES ('xxxxxxxxxxxxxxxxxxxx', 'Jakarta Utara')";
         Db::getInstance()->Execute($query);
-
-        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
-            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
-                $service_prefix = $service_properties["prefix"];
-
-                $carrier = new Carrier();
-
-                $carrier->name                  = $carrier_name;
-                $carrier->active                = TRUE;
-                $carrier->deleted               = 0;
-                $carrier->shipping_handling     = FALSE;
-                $carrier->range_behavior        = 0;
-                $carrier->shipping_external     = TRUE;
-                $carrier->is_module             = TRUE;
-                $carrier->external_module_name  = $this->name;
-                $carrier->need_range            = TRUE;
-
-                $carrier->delay[Configuration::get("PS_LANG_DEFAULT")] = $service_name;
+        
+            foreach ($this->_carriers as $key => $value) {
+                //Create own carrier
+                $carrier = new Carrier();                
+                if($value=='mcj' OR $value=='mcj2' OR $value=='mcj3' OR $value=='mcj31' OR $value=='mcj32'){
+                    $carrier->name = 'JNE';
+                }
+                if(/*$value=='mcj4' OR */$value=='mcj5' OR $value=='mcj6' OR $value=='mcj7'){
+                    $carrier->name = 'TIKI';
+                }
+                if(/*$value=='mcj8' OR */$value=='mcj9' OR /*$value=='mcj10' OR $value=='mcj11'
+                     OR $value=='mcj12' OR */$value=='mcj13'/* OR $value=='mcj14'*/){
+                    $carrier->name = 'POS';
+                } 
+                $carrier->active = TRUE;
+                $carrier->deleted = 0;
+                $carrier->shipping_handling = FALSE;
+                $carrier->range_behavior = 0;
+                $carrier->delay[Configuration::get('PS_LANG_DEFAULT')] = $key;
+                $carrier->shipping_external = TRUE;
+                $carrier->is_module = TRUE;
+                $carrier->external_module_name = $this->name;
+                $carrier->need_range = TRUE;
 
                 if ($carrier->add()) {
                     $groups = Group::getGroups(true);
                     foreach ($groups as $group) {
-                        $group_id = $group["id_group"];
-
-                        $query = "INSERT INTO " . _DB_PREFIX_ . "carrier_group (id_carrier, id_group)
-                                  VALUES ('{$carrier->id}', '{$group_id}')";
+                        $query = "INSERT INTO "._DB_PREFIX_."carrier_group (id_carrier, id_group) VALUES ('".$carrier->id."', '".$group['id_group']."')";
                         Db::getInstance()->Execute($query);
                     }
 
-                    $rangePrice             = new RangePrice();
+                    $rangePrice = new RangePrice();
                     $rangePrice->id_carrier = $carrier->id;
-                    $rangePrice->delimiter1 = 0.0;
-                    $rangePrice->delimiter2 = 100000000.0;
+                    $rangePrice->delimiter1 = '0';
+                    $rangePrice->delimiter2 = '1000000';
                     $rangePrice->add();
 
-                    $rangeWeight             = new RangeWeight();
+                    $rangeWeight = new RangeWeight();
                     $rangeWeight->id_carrier = $carrier->id;
-                    $rangeWeight->delimiter1 = 0.0;
-                    $rangeWeight->delimiter2 = 1000000.0;
+                    $rangeWeight->delimiter1 = '0';
+                    $rangeWeight->delimiter2 = '1000000';
                     $rangeWeight->add();
 
                     $zones = Zone::getZones(true);
-                    foreach ($zones as $zone) {
-                        $zone_id = $zone["id_zone"];
-
-                        $zone_queries = array(
-                            "INSERT INTO " . _DB_PREFIX_ . "carrier_zone (id_carrier, id_zone)
-                             VALUES ('{$carrier->id}', '{$zone_id}')",
-                            "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                             VALUES ('{$carrier->id}', '{$rangePrice->id}', '" . NULL . "', '{$zone_id}', '25')",
-                            "INSERT INTO " . _DB_PREFIX_ . "delivery (id_carrier, id_range_price, id_range_weight, id_zone, price)
-                             VALUES ('{$carrier->id}', '" . NULL . "', '{$rangeWeight->id}', '{$zone_id}', '25')",
-                        );
-
-                        foreach ($zone_queries as $zone_query) { Db::getInstance()->Execute($zone_query); }
+                    foreach ($zones as $z) {
+                        $queryZone1 = "INSERT INTO "._DB_PREFIX_."carrier_zone (id_carrier, id_zone) VALUES ('".$carrier->id."', '".$z['id_zone']."')";
+                        Db::getInstance()->Execute($queryZone1);
+                        $queryZone2 = "INSERT INTO "._DB_PREFIX_."delivery (id_carrier, id_range_price, id_range_weight, id_zone, price) VALUES ('".$carrier->id."', '".$rangePrice->id."', '".NULL."', '".$z['id_zone']."', '25')";
+                        Db::getInstance()->Execute($queryZone2);
+                        $queryZone3 = "INSERT INTO "._DB_PREFIX_."delivery (id_carrier, id_range_price, id_range_weight, id_zone, price) VALUES ('".$carrier->id."', '".NULL."', '".$rangeWeight->id."', '".$z['id_zone']."', '25')";
+                        Db::getInstance()->Execute($queryZone3);
                     }
 
-                    $carrier_id = (int) $carrier->id;
-                    
-                    if ($carrier_name == "JNE") {
-                        copy($this->_IMAGE_JNE, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
+                    if($value=='mcj' OR $value=='mcj2' OR $value=='mcj3' OR $value=='mcj31' OR $value=='mcj32'){
+                        copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
-
-                    if ($carrier_name == "TIKI") {
-                        copy($this->$_IMAGE_TIKI, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
+                    if(/*$value=='mcj4' OR */$value=='mcj5' OR $value=='mcj6' OR $value=='mcj7'){
+                        copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
                     }
-
-                    if ($carrier_name == "POS") {
-                        copy($this->$_IMAGE_POS, _PS_SHIP_IMG_DIR_ . "/{$carrier_id}.jpg");
-                    }
+                    if(/*$value=='mcj8' OR */$value=='mcj9' OR /*$value=='mcj10' OR $value=='mcj11'
+                         OR $value=='mcj12' OR */$value=='mcj13'/* OR $value=='mcj14'*/){
+                        copy(dirname(__FILE__) . '/views/img/carrier.jpg', _PS_SHIP_IMG_DIR_ . '/' . (int) $carrier->id . '.jpg');
+                    }                    
 
                     Configuration::updateValue(self::PREFIX . $value, $carrier->id);
-                    Configuration::updateValue(self::PREFIX . "{$value}_reference", $carrier->id);
+                    Configuration::updateValue(self::PREFIX . $value . '_reference', $carrier->id);
                 }
-            }
+            }//end of foreach ($this->_carriers as $key => $value) {
+                        
+        return TRUE;
+    }
+
+    protected function deleteCarriers()
+    {
+        foreach ($this->_carriers as $value) {
+            $tmp_carrier_id = Configuration::get(self::PREFIX . $value);
+            $carrier = new Carrier($tmp_carrier_id);
+            $carrier->delete();
         }
 
         return TRUE;
     }
 
-    /**
-     * Uninstalls this module, extends Module::uninstall().
-     * @see Module::uninstall()
-     * @return bool
-     */
-    public function uninstall() {
+    public function uninstall()
+    {
         if (parent::uninstall()) {
             foreach ($this->_hooks as $hook) {
-                if (! $this->unregisterHook($hook)) { return FALSE; }
+                if (!$this->unregisterHook($hook)) {
+                    return FALSE;
+                }
             }
 
-            if (!$this->uninstallDB()) { return FALSE; }
-            if (!$this->deleteCarriers()) { return FALSE; }
+            if (!$this->uninstallDB()) {
+                return FALSE;
+            }
 
-            unlink($this->_CAF_TARGET);
+            if (!$this->deleteCarriers()) {
+                return FALSE;
+            }
+
+            // DELETE CustomerAddressFormatter FROM OVERRIDE CLASS            
+            unlink(_PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
 
             return TRUE;
         }
@@ -330,350 +241,483 @@ class mycarrier_rj extends CarrierModule {
         return FALSE;
     }
 
-    /**
-     * Uninstalls module database.
-     * @see mycarrier_rj::uninstall()
-     * @return bool
-     */
-    protected function uninstallDB() {
-        $queries = array(
-            "DROP TABLE IF EXISTS `{$this->_FRONT_TABLE_NAME}`",
-        );
-
-        foreach ($queries as $query) {
-            if (! Db::getInstance()->Execute($query)) { return FALSE; }
-        }
-
-        return TRUE;
-    }
-
-    /**
-     * Removes module supported carriers and carrier services from 
-     * PrestaShop's configuration.
-     * @see mycarrier_rj::uninstall()
-     * @return bool
-     */
-    protected function deleteCarriers() {
-        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
-            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
-                $service_prefix = $service_properties["prefix"];
-
-                $tmp_carrier_id = Configuration::get(self::PREFIX . $service_prefix);
-                $carrier = new Carrier($tmp_carrier_id);
-                $carrier->delete();
-            }
-        }
-
-        return TRUE;
-    }
-
-    /**
-     * Loads and processes module settings page.
-     * @see mycarrier_rj::displayForm()
-     * @return string
-     */
-    public function getContent() {
-        $output = NULL;
-
-        if (Tools::isSubmit("submit".$this->name)) {
-            $api_key = strval(Tools::getValue(self::CFGN_API_KEY));
-            $origin_city = strval(Tools::getValue(self::CFGN_ORIGIN_CITY));
-
-            if (! $api_key
-                OR empty($api_key)
-                OR ! Validate::isGenericName($api_key)
-
-                OR ! $origin_city
-                OR empty($origin_city)
-                OR ! Validate::isGenericName($origin_city)) {
-                $output .= $this->displayError($this->l("Invalid configuration value!"));
-            } else {
-                Configuration::updateValue(self::CFGN_API_KEY, $api_key);
-                Configuration::updateValue(self::CFGN_ORIGIN_CITY, $origin_city);
-
-                $query = "UPDATE `{$this->_FRONT_TABLE_NAME}`
-                          SET api_key='{$api_key}', from_city='{$origin_city}'
-                          WHERE id_mycarrier_rj_ijl = 1";
+    public function getContent()
+    {
+        $output = null;
+     
+        if (Tools::isSubmit('submit'.$this->name))
+        {
+            $my_carrier_api = strval(Tools::getValue('myc_api'));
+            $my_carrier_city = strval(Tools::getValue('myc_city'));
+            if (!$my_carrier_api
+              || empty($my_carrier_api)
+              || !Validate::isGenericName($my_carrier_api)
+              || !$my_carrier_city
+              || empty($my_carrier_city)
+              || !Validate::isGenericName($my_carrier_city))
+                $output .= $this->displayError($this->l('Invalid Configuration Value'));
+            else
+            {
+                Configuration::updateValue('myc_api', $my_carrier_api);
+                Configuration::updateValue('myc_city', $my_carrier_city);
+                //UPDATE DATABASE
+                $query = "UPDATE "._DB_PREFIX_."mycarrier_rj_ijl SET api_key='".$my_carrier_api."', from_city='".$my_carrier_city."' WHERE id_mycarrier_rj_ijl = 1";
                 Db::getInstance()->Execute($query);
+                $output .= $this->displayConfirmation($this->l('Settings updated'));
 
-                $output .= $this->displayConfirmation($this->l("Settings updated."));
             }
         }
-        return $output . $this->displayForm();
+        return $output.$this->displayForm();
     }
 
-    /**
-     * Displays form on module settings.
-     * @return string
-     */
-    public function displayForm() {
-        $default_lang = (int) Configuration::get("PS_LANG_DEFAULT");
+    public function displayForm()
+        {
+
+        // Get default language
+        $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 
         $options = array();
-        $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);
-        $responseCity = json_decode($responseCity);
-
+        $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);/*GET LIST OF CITY FROM LOCAL JSON FILE*/
+        $responseCity = json_decode($responseCity);/*DECODE THE JSON, BECAUSE IT WAS A STRING*/      
+          
         foreach ($responseCity->rajaongkir->results as $key) {
             $options[] = array(
-                "id"   => $key->city_name,
+                "id" => $key->city_name,
                 "name" => $key->city_name
             );
         }
-
-        $fields_form[0]["form"] = array(
-            "legend" => array(
-                "title" => $this->l("My Carrier Settings"),
+         
+        // Init Fields form array
+        $fields_form[0]['form'] = array(
+            'legend' => array(
+                'title' => $this->l('My Carrier Setting'),
             ),
-            "input" => array(
+            'input' => array(
                 array(
-                    "type"     => "text",
-                    "label"    => $this->l("API Key"),
-                    "desc"     => $this->l("RajaOngkir API Key (see https://rajaongkir.com/dokumentasi#aturan-penggunaan)."),
-                    "name"     => self::CFGN_API_KEY,
-                    "size"     => 50,
-                    "required" => true
+                    'type' => 'text',
+                    'label' => $this->l('API Key'),
+                    'name' => 'myc_api',
+                    'size' => 50,
+                    'required' => true
                 ),
                 array(
-                    "type"     => "select",
-                    "label"    => $this->l("Origin City"),
-                    "desc"     => $this->l("Choose origin city."),
-                    "name"     => self::CFGN_ORIGIN_CITY,
-                    "required" => true,
-                    "options"  => array(
-                        "query" => $options,
-                        "id"    => "id",
-                        "name"  => "name"
-                    )
+                    'type' => 'select',                              // This is a <select> tag.
+                    'label' => $this->l('City From:'),         // The <label> for this <select> tag.
+                    'desc' => $this->l('Choose a City From'),  // A help text, displayed right next to the <select> tag.
+                    'name' => 'myc_city',                     // The content of the 'id' attribute of the <select> tag.
+                    'required' => true,                              // If set to true, this option must be set.
+                    'options' => array(
+                        'query' => $options,                           // $options contains the data itself.
+                            'id' => 'id',                           // The value of the 'id' key must be the same as the key for 'value' attribute of the <option> tag in each $options sub-array.
+                            'name' => 'name'                               // The value of the 'name' key must be the same as the key for the text content of the <option> tag in each $options sub-array.
+                        )
                 ),
             ),
-            "submit" => array(
-                "title" => $this->l("Save"),
-                "class" => "btn btn-default pull-right"
+            'submit' => array(
+                'title' => $this->l('Save'),
+                'class' => 'btn btn-default pull-right'
             )
         );
-
+         
         $helper = new HelperForm();
-
+         
+        // Module, token and currentIndex
         $helper->module = $this;
         $helper->name_controller = $this->name;
-        $helper->token = Tools::getAdminTokenLite("AdminModules");
-        $helper->currentIndex = AdminController::$currentIndex . "&configure={$this->name}";
-
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
+         
+        // Language
         $helper->default_form_language = $default_lang;
         $helper->allow_employee_form_lang = $default_lang;
-
+         
+        // Title and toolbar
         $helper->title = $this->displayName;
-        $helper->show_toolbar = true;
-        $helper->toolbar_scroll = true;
-        $helper->submit_action = "submit" . $this->name;
+        $helper->show_toolbar = true;        // false -> remove toolbar
+        $helper->toolbar_scroll = true;      // yes - > Toolbar is always visible on the top of the screen.
+        $helper->submit_action = 'submit'.$this->name;
         $helper->toolbar_btn = array(
-            "save" => array(
-                "desc" => $this->l("Save"),
-                "href" => AdminController::$currentIndex . "&configure={$this->name}&save{$this->name}&token=" . Tools::getAdminTokenLite("AdminModules"),
+            'save' =>
+            array(
+                'desc' => $this->l('Save'),
+                'href' => AdminController::$currentIndex.'&configure='.$this->name.'&save'.$this->name.
+                '&token='.Tools::getAdminTokenLite('AdminModules'),
             ),
-            "back" => array(
-                "desc" => $this->l("Back to list"),
-                "href" => AdminController::$currentIndex . "&token=" . Tools::getAdminTokenLite("AdminModules")
+            'back' => array(
+                'href' => AdminController::$currentIndex.'&token='.Tools::getAdminTokenLite('AdminModules'),
+                'desc' => $this->l('Back to list')
             )
         );
-
-        $helper->fields_value[self::CFGN_API_KEY] = Configuration::get(self::CFGN_API_KEY);
-        $helper->fields_value[self::CFGN_ORIGIN_CITY] = Configuration::get(self::CFGN_ORIGIN_CITY);
-
+         
+        // Load current value
+        $helper->fields_value['myc_api'] = Configuration::get('myc_api');
+        $helper->fields_value['myc_city'] = Configuration::get('myc_city');
+         
         return $helper->generateForm($fields_form);
     }
 
-    /**
-     * Calculate order shipping cost depending on the ranges set.
-     * @see CarrierModule::getOrderShippingCost()
-     * @return mixed
-     */
-    public function getOrderShippingCost($params, $shipping_cost) {
-        $carrier_name = NULL;
-        $carrier_flag = NULL;
-        $service_name = NULL;
-        $service_flag = NULL;
-        $originCity = NULL;
-        $destinationCity = NULL;
+    public function getOrderShippingCost($params, $shipping_cost)//CALCULATE SHIPPING COST HERE
+    {
 
-        foreach ($this->_carriers as $l_carrier_name => $l_carrier_properties) {
-            foreach ($l_carrier_properties["services"] as $l_service_name => $l_service_properties) {
-                $service_prefix = $l_service_properties["prefix"];
+        $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000;//GET TOTAL WEIGHT PN CART
+        // EDITED 11-05-2020, getTotalWeight DI KALI 1000 KARENA INPUT DARI CMS DALAM SATUAN KG SEDANGKAN API RAJA ONGKIR DALAM SATUAN GRAM
 
-                if ($this->id_carrier == (int) (Configuration::get(self::PREFIX . "{$service_prefix}_reference"))) {
-                    $carrier_flag = $l_carrier_properties["rj_api_courier"];
-                    $carrier_name = $l_carrier_name;
-                    $service_name = $l_service_name;
-                    $service_flag = $l_service_properties["rj_service"];
+        //GET API KEY & CITY FROM DATABASE
+        $sqlMyCarrier = 'SELECT * FROM '._DB_PREFIX_.'mycarrier_rj_ijl WHERE id_mycarrier_rj_ijl = 1';
+        if ($rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier))        
 
-                    // we found our data, just break.
-                    break;
+        $address = new Address($this->context->cart->id_address_delivery);//GET CURRENT CUSTOMER ADDRESS DELIVERY
+
+        $from = $rowMyCarrier['from_city'];
+        $to = $address->city;
+        if($weight<1){//SET THE DEFFAULT IF WEIGHT IF BELOW 1 KG
+        $weight=1;
+        }
+ 
+        /* GET CITY FROM AND TO FROM LOCAL JSON FILE (NOT UPDATED BUT FASTER) */
+        $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);/*GET LIST OF CITY FROM LOCAL JSON FILE*/
+        $responseCity = json_decode($responseCity);/*DECODE THE JSON, BECAUSE IT WAS A STRING*/      
+          
+           foreach ($responseCity->rajaongkir->results as $key) {
+               if ($key->city_name == $from) {
+                   $fromCity = $key->city_id;
+                   break;               
+               }
+           } 
+
+           foreach ($responseCity->rajaongkir->results as $key) {
+               if ($key->city_name == $to) {
+                   $toCity = $key->city_id;
+                   break;               
+               }
+           }   
+        /* GET CITY FROM AND TO FROM LOCAL JSON FILE (NOT UPDATED BUT FASTER) */
+
+        /* JNE */
+
+        if( isset($fromCity) && isset($toCity) ){
+
+            $cache_jne_id = 'ShoppingCost::jne::'.$fromCity.'_'.$toCity.'_'.$weight;
+            $cache_tiki_id = 'ShoppingCost::tiki::'.$fromCity.'_'.$toCity.'_'.$weight;
+            $cache_pos_id = 'ShoppingCost::pos::'.$fromCity.'_'.$toCity.'_'.$weight;
+
+
+             if (!Cache::isStored($cache_jne_id)) {
+
+                $curlCostJne = curl_init();
+
+                curl_setopt_array($curlCostJne, array(
+                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => "",
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => "POST",
+                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=jne",
+                  CURLOPT_IPRESOLVE => true,
+                  CURL_IPRESOLVE_V4 => true,
+                  CURLOPT_ENCODING => true,
+                  CURLOPT_HTTPHEADER => array(
+                    "content-type: application/x-www-form-urlencoded",
+                    "key: ".$rowMyCarrier['api_key']
+                  ),
+                ));
+
+                $responseCostJne = curl_exec($curlCostJne);
+
+                 $errCostJne = curl_error($curlCostJne);
+
+                curl_close($curlCostJne);
+                if ($errCostJne) {
+                  //echo "cURL Error #:" . $errCostJne;
+                } else {
+                    Cache::store($cache_jne_id, $responseCostJne);
+                }
+                
+             }        
+             else {
+                $responseCostJne = Cache::retrieve($cache_jne_id);
+                // dump($responseCostJne, "cachejne");
+             } 
+
+            
+           
+            /* JNE */
+
+
+             if (!Cache::isStored($cache_tiki_id)) {
+                 $curlCostTiki = curl_init();
+
+                curl_setopt_array($curlCostTiki, array(
+                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => "",
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => "POST",
+                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=tiki",
+                  CURLOPT_IPRESOLVE => true,
+                  CURL_IPRESOLVE_V4 => true,
+                  CURLOPT_ENCODING => true,
+                  CURLOPT_HTTPHEADER => array(
+                    "content-type: application/x-www-form-urlencoded",
+                    "key: ".$rowMyCarrier['api_key']
+                  ),
+                ));
+
+                $responseCostTiki = curl_exec($curlCostTiki);
+                $errCostTiki = curl_error($curlCostTiki);
+
+                curl_close($curlCostTiki);
+                if ($errCostTiki) {
+                  //echo "cURL Error #:" . $errCostTiki;
+                } else {
+                   Cache::store($cache_tiki_id, $responseCostTiki);
+                }
+
+             }        
+             else {
+                $responseCostTiki = Cache::retrieve($cache_tiki_id);
+                // dump($responseCostTiki, "cachetiki");
+             }  
+            /* TIKI */
+           
+            /* TIKI */
+
+            /* POS */
+            if (!Cache::isStored($cache_pos_id)) {
+
+                $curlCostPos = curl_init();
+
+                curl_setopt_array($curlCostPos, array(
+                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => "",
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => "POST",
+                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=pos",
+                  CURLOPT_IPRESOLVE => true,
+                  CURL_IPRESOLVE_V4 => true,
+                  CURLOPT_ENCODING => true,
+                  CURLOPT_HTTPHEADER => array(
+                    "content-type: application/x-www-form-urlencoded",
+                    "key: ".$rowMyCarrier['api_key']
+                  ),
+                ));
+
+                $responseCostPos = curl_exec($curlCostPos);
+                $errCostPos = curl_error($curlCostPos);
+                
+                curl_close($curlCostPos);
+
+                if ($errCostPos) {
+                  //echo "cURL Error #:" . $errCostPos;
+                }    else {
+                   Cache::store($cache_pos_id, $responseCostPos);
+                }
+
+
+             }        
+             else {
+                $responseCostPos = Cache::retrieve($cache_pos_id);
+                // dump($responseCostPos, "cachepos");
+             } 
+            /* POS */  
+            $responseCostJne = json_decode($responseCostJne);        
+            $ongkirOkeJne = false;
+            $ongkirRegJne = false;
+            $ongkirYesJne = false;
+            $ongkirCtcJne = false;
+            $ongkirCtcYesJne = false;
+            if(isset($responseCostJne->rajaongkir->results[0]->costs[0]->cost[0]->value)){
+                foreach ($responseCostJne->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'OKE' ){
+                        $ongkirOkeJne=$value->cost[0]->value;
+                    }
+                    if( $value->service == 'REG' ){
+                        $ongkirRegJne=$value->cost[0]->value;
+                    }
+                    if( $value->service == 'YES' ){
+                        $ongkirYesJne=$value->cost[0]->value;
+                    }
+                    if( $value->service == 'CTC' ){
+                        $ongkirCtcJne=$value->cost[0]->value;
+                    }
+                    if( $value->service == 'CTCYES' ){
+                        $ongkirCtcYesJne=$value->cost[0]->value;
+                    }
+                }
+            }           
+
+            $responseCostTiki = json_decode($responseCostTiki);     
+            /*$ongkirTiki1=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostTiki->rajaongkir->results[0]->costs[0]->cost[0]->value)){
+                $ongkirTiki1=$responseCostTiki->rajaongkir->results[0]->costs[0]->cost[0]->value;
+            }*/
+            $ongkirTiki2=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostTiki->rajaongkir->results[0]->costs[1]->cost[0]->value)){
+                foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'REG' ){
+                        $ongkirTiki2=$value->cost[0]->value;
+                        break;
+                    }
                 }
             }
-            if (! is_null($service_flag)) { break; /* domino effect from inner foreach */ }
-        }
-
-        if (is_null($service_flag)) { return FALSE; } // we don"t have service and carrier data here.
-
-        // question is, do we need to check other flags, i.e. $carrier_flag, etc
-
-        // RajaOngkir API returns in grams, while front-end input is in kilograms
-        // so we're now processing in grams.
-        $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000.0;
-        $weight = max($weight, 1000.00); // minimum weight is 1kg
-
-        $sqlMyCarrier = "SELECT * FROM `{$this->_FRONT_TABLE_NAME}` WHERE id_mycarrier_rj_ijl = 1";
-        $rowMyCarrier = Db::getInstance()->getRow($sqlMyCarrier);
-
-        $address = new Address($this->context->cart->id_address_delivery);
-        $state = new State();
-
-        $from = $rowMyCarrier["from_city"];
-        $to = $state::getNameById($address->id_state);
-
-        // TODO: City database should be pre-fetched from RajaOngkir API and probably cached
-        // in our database.
-        $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);
-        $responseCity = json_decode($responseCity);
-
-        $originCity = NULL;
-        $destinationCity = NULL;
-
-        foreach ($responseCity->rajaongkir->results as $key) {
-            if ($key->city_name == $from) { $originCity = $key->city_id; }
-
-            if (preg_match_all("/\(([^\]]*)\)/", $to, $matches)) {
-                if ($matches[1][0] == "Kota") {
-                    $temp = explode("(", $to);
-                    if (trim($temp[0]) == $key->city_name AND $key->type == "Kota") { $destinationCity = $key->city_id; }
+            $ongkirTiki3=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostTiki->rajaongkir->results[0]->costs[2]->cost[0]->value)){
+                foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'ECO' ){
+                        $ongkirTiki3=$value->cost[0]->value;
+                        break;
+                    }
                 }
-            } elseif ($key->city_name == $to) { $destinationCity = $key->city_id; }
-            else { continue; }
-
-            if (! is_null($originCity) AND ! is_null($destinationCity)) { break; }
-        }
-
-        // cannot calculate if there's no origin/destination.
-        if (is_null($originCity) OR is_null($destinationCity)) { return FALSE; }
-
-        // we got origin and destination.
-
-        // TODO: think of a better way on caching RajaOngkir API results.
-        $cache_id = "ShoppingCost::{$carrier_flag}::{$originCity}_{$destinationCity}_{$weight}";
-        // TODO: rather than caching via PrestaShop, we prefer caching to MySQL table, because not all
-        //       installations, sane or not, have enabled cache.
-        //       But, some installations would have limited MySQL storage size, so we should manage it carefully.
-        if (! Cache::isStored($cache_id)) {
-            $roa = $this->checkRajaOngkirApi($rowMyCarrier["api_key"], $originCity, $destinationCity, $weight, $carrier_flag);
-            $response = $roa["response"];
-            $error_response = $roa["error"];
-
-            if ($error_response) {
-                // bad things happened, and we have no shipping cost
-                // better we throw something here...
-                // TODO: shipping price is free if RajaOngkir API is dead.
-                return FALSE;
-            } else {
-                // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
-                Cache::store($cache_id, $response);
             }
-        } else {
-            $response = Cache::retrieve($cache_id);
-        }
+            $ongkirTiki4=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostTiki->rajaongkir->results[0]->costs[3]->cost[0]->value)){
+                foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'ONS' ){
+                        $ongkirTiki4=$value->cost[0]->value;
+                        break;
+                    }
+                }
+            }    
 
-        // we got API response in $response, now we need to compare to our $service_flag to get shipping cost.
-        $response_obj = json_decode($response);
-        if (isset($response_obj->rajaongkir->results[0]->costs[0]->cost[0]->value)) { // just to validate our response
-            foreach ($response_obj->rajaongkir->results[0]->costs as $value) {
-                if ($value->service == $service_flag) { return $value->cost[0]->value; }
+            $responseCostPos = json_decode($responseCostPos);     
+            /*$ongkirPos1=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[0]->cost[0]->value)){
+                $ongkirPos1=$responseCostPos->rajaongkir->results[0]->costs[0]->cost[0]->value;
+            }*/
+            $ongkirPos2=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[1]->cost[0]->value)){
+                foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'Paket Kilat Khusus' ){
+                        $ongkirPos2=$value->cost[0]->value;
+                        break;
+                    }
+                }
             }
-        }
+            /*$ongkirPos3=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[2]->cost[0]->value)){
+                $ongkirPos3=$responseCostPos->rajaongkir->results[0]->costs[2]->cost[0]->value;
+            }
+            $ongkirPos4=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[3]->cost[0]->value)){
+                $ongkirPos4=$responseCostPos->rajaongkir->results[0]->costs[3]->cost[0]->value;
+            }
+            $ongkirPos5=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[4]->cost[0]->value)){
+                $ongkirPos5=$responseCostPos->rajaongkir->results[0]->costs[4]->cost[0]->value;
+            }*/
+            $ongkirPos6=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[5]->cost[0]->value)){
+                foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
+                    if( $value->service == 'Express Next Day Barang' ){
+                        $ongkirPos6=$value->cost[0]->value;
+                        break;
+                    }
+                }
+            }
+            /*$ongkirPos7=false;//PREPARE ONGKIR VALUE
+            if(isset($responseCostPos->rajaongkir->results[0]->costs[6]->cost[0]->value)){
+                $ongkirPos7=$responseCostPos->rajaongkir->results[0]->costs[6]->cost[0]->value;
+            }*/
 
-        return FALSE;
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj_reference')))
+                return $ongkirOkeJne;//ONGKIR KATEGORI OKE
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj2_reference')))
+                return $ongkirRegJne;//ONGKIR KATEGORI REG
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj3_reference')))
+                return $ongkirYesJne;//ONGKIR KATEGORI YES
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj31_reference')))
+                return $ongkirCtcJne;//ONGKIR KATEGORI YES
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj32_reference')))
+                return $ongkirCtcYesJne;//ONGKIR KATEGORI YES
+            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj4_reference')))
+                return $ongkirTiki1;*/
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj5_reference')))
+                return $ongkirTiki2;
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj6_reference')))
+                return $ongkirTiki3;
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj7_reference')))
+                return $ongkirTiki4;
+
+            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj8_reference')))
+                return $ongkirPos1;*/
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj9_reference')))
+                return $ongkirPos2;
+            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj10_reference')))
+                return $ongkirPos3;
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj11_reference')))
+                return $ongkirPos4;
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj12_reference')))
+                return $ongkirPos5;*/
+            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj13_reference')))
+                return $ongkirPos6;
+            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj14_reference')))
+                return $ongkirPos7;*/
+            return false;//HILANGKAN CARRIER BILA ONGKIR TIDAK TERSEDIA
+        }
     }
 
-    /**
-     * Calculate order shipping cost ignoring ranges set. Should be the
-     * same as mycarrier_rj::getOrderShippingCost because this module 
-     * doesn't use the ranges either.
-     * 
-     * @see mycarrier_rj::getOrderShippingCost()
-     * @see CarrierModule::getOrderShippingCost()
-     * @return mixed
-     */
-    public function getOrderShippingCostExternal($params) {
+    public function getOrderShippingCostExternal($params)//USE THIS IF CARRIER NEED RANGE = 0
+    {
         return $this->getOrderShippingCost($params, 0);
     }
 
-    /**
-     * Hook method to call on Carrier update.
-     * @see mycarrier_rj::$_hooks
-     */
-    public function hookActionCarrierUpdate($params) {
-        // loops make things easier.
-        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
-            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
-                $service_prefix = $service_properties["prefix"];
-
-                if ($params["carrier"]->id_reference == Configuration::get(self::PREFIX . "{$service_prefix}_reference")) {
-                    Configuration::updateValue(self::PREFIX . "{$service_prefix}", $params["carrier"]->id);
-                }
-            }
+    public function hookActionCarrierUpdate($params)//This hook is required to ensure that the module will not lose connection with the carrier, created by the module
+    {
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj', $params['carrier']->id);
         }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj2_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj2', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj3_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj3', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj31_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj31', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj32_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj32', $params['carrier']->id);
+        }
+        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj4_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj4', $params['carrier']->id);
+        }*/
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj5_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj5', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj6_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj6', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj7_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj7', $params['carrier']->id);
+        }
+        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj8_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj8', $params['carrier']->id);
+        }*/
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj9_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj9', $params['carrier']->id);
+        }
+        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj10_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj10', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj11_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj11', $params['carrier']->id);
+        }
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj12_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj12', $params['carrier']->id);
+        }*/
+        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj13_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj13', $params['carrier']->id);
+        }
+        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj14_reference')) {
+            Configuration::updateValue(self::PREFIX . 'mcj14', $params['carrier']->id);
+        }*/
     }
 
-    /**
-     * Log messages to a file.
-     * @param string $message Message to log.
-     * @return mixed
-     */
-    protected function log($message) {
-        $file_ext = ".log";
-        $ymd = strftime("%Y%m%d");
-        $file_path = "{$this->_LOG_PATH}{$this->_LOG_PREFIX}_{$ymd}{$file_ext}";
-
-        if (! $fp = @fopen($file_path, "ab")) { return FALSE; }
-
-        flock($fp, LOCK_EX);
-        $ctime = strftime("%Y-%m-%d %H:%M:%S");
-        return fwrite($fp, "[{$ctime}] {$message}\n");
-
-        fclose($fp);
-    }
-
-    /**
-     * Send a request to RajaOngkir API
-     * @param string $api_key RajaOngkir API key.
-     * @param int $origin Origin city ID.
-     * @param int $destination Destination city ID.
-     * @param float $weight Package weight, in grams.
-     * @param string $courier Courier flag.
-     * @return array
-     */
-    protected function checkRajaOngkirApi($api_key, $origin, $destination, $weight, $courier) {
-        $curl_obj = curl_init();
-
-        // TODO: handle RajaOngkir non-starter accounts.
-        curl_setopt_array($curl_obj, array(
-            CURLOPT_URL            => "https://api.rajaongkir.com/starter/cost",
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_ENCODING       => "",
-            CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-            CURLOPT_POST           => TRUE,
-            CURLOPT_POSTFIELDS     => "origin={$origin}&destination={$destination}&weight={$weight}&courier={$courier}",
-            CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
-            CURLOPT_HTTPHEADER     => array("key: {$api_key}"),
-        ));
-
-        $response = curl_exec($curl_obj);
-        $error_response = curl_error($curl_obj);
-        curl_close($curl_obj);
-
-        return array(
-            "response" => $response, 
-            "error" => $error_response
-        );
-    }
 }
