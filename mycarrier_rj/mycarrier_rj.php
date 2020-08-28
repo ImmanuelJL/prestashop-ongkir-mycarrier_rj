@@ -1,18 +1,21 @@
 <?php
-/*                  NOTE                  *
-*******************************************/
-/* Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
-* Dukung dengan like dan share :)
-* ****************************************************
-* @author  Immanuel Julianto Lasmana <immanueljl44@gmail.com>
-* @site    https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
-* @copyright  Copyright (c)2017 
-* @license    FREE LICENSE SOFTWARE (BOLEH DIPAKAI UNTUK KEPERLUAN APAPUN TANPA MERUBAH COPYRIGHT NOTICE)
-*/
+/**
+ * mycarrier_rj.php
+ * File module utama untuk install, uninstall, dan proses penghitungan ongkir via API Raja Ongkir
+ *
+ * Cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut.
+ * Dukung dengan like dan share :)
+ *
+ * @author      Immanuel Julianto Lasmana <immanueljl44@gmail.com>
+ * @link        https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/
+ * @copyright   2017 Immanuel Julianto Lasmana et al.
+ * @license     GPL-3.0 (https://opensource.org/licenses/GPL-3.0)
+ */
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
-/*THIS CLASS NAME SHOULD SAME WITH FOLDER/MODULE NAME*/
+
 class mycarrier_rj extends CarrierModule
 {
     const PREFIX = 'mycarrier_rj_mcj_';
@@ -359,8 +362,10 @@ class mycarrier_rj extends CarrierModule
     public function getOrderShippingCost($params, $shipping_cost)//CALCULATE SHIPPING COST HERE
     {
 
-        $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000;//GET TOTAL WEIGHT PN CART
-        // EDITED 11-05-2020, getTotalWeight DI KALI 1000 KARENA INPUT DARI CMS DALAM SATUAN KG SEDANGKAN API RAJA ONGKIR DALAM SATUAN GRAM
+        // RajaOngkir API returns in grams, while front-end input is in kilograms
+        // so we're now processing in grams.
+        $weight = (float) $this->context->cart->getTotalWeight($this->context->cart->getProducts()) * 1000.0;
+        $weight = max($weight, 1000.00); // minimum weight is 1kg
 
         //GET API KEY & CITY FROM DATABASE
         $sqlMyCarrier = 'SELECT * FROM '._DB_PREFIX_.'mycarrier_rj_ijl WHERE id_mycarrier_rj_ijl = 1';
@@ -370,163 +375,93 @@ class mycarrier_rj extends CarrierModule
 
         $from = $rowMyCarrier['from_city'];
         $to = $address->city;
-        if($weight<1){//SET THE DEFFAULT IF WEIGHT IF BELOW 1 KG
-        $weight=1;
-        }
  
         /* GET CITY FROM AND TO FROM LOCAL JSON FILE (NOT UPDATED BUT FASTER) */
         $responseCity = file_get_contents("controllers/front/city-ojb.json", FILE_USE_INCLUDE_PATH);/*GET LIST OF CITY FROM LOCAL JSON FILE*/
         $responseCity = json_decode($responseCity);/*DECODE THE JSON, BECAUSE IT WAS A STRING*/      
-          
-           foreach ($responseCity->rajaongkir->results as $key) {
-               if ($key->city_name == $from) {
-                   $fromCity = $key->city_id;
-                   break;               
-               }
-           } 
+        
+        $fromCity = NULL;
+        $toCity = NULL;
 
-           foreach ($responseCity->rajaongkir->results as $key) {
-               if ($key->city_name == $to) {
-                   $toCity = $key->city_id;
-                   break;               
-               }
-           }   
-        /* GET CITY FROM AND TO FROM LOCAL JSON FILE (NOT UPDATED BUT FASTER) */
+        foreach ($responseCity->rajaongkir->results as $key) {
+            if ($key->city_name == $from) { $fromCity = $key->city_id; }
 
-        /* JNE */
+            if (preg_match_all("/\(([^\]]*)\)/", $to, $matches)) {
+                if ($matches[1][0] == "Kota") {
+                    $temp = explode("(", $to);
+                    if (trim($temp[0]) == $key->city_name AND $key->type == "Kota") { $toCity = $key->city_id; }
+                }
+            } elseif ($key->city_name == $to) { $toCity = $key->city_id; }
+            else { continue; }
 
+            if (! is_null($fromCity) AND ! is_null($toCity)) { break; }
+        }
+        
         if( isset($fromCity) && isset($toCity) ){
-
             $cache_jne_id = 'ShoppingCost::jne::'.$fromCity.'_'.$toCity.'_'.$weight;
             $cache_tiki_id = 'ShoppingCost::tiki::'.$fromCity.'_'.$toCity.'_'.$weight;
             $cache_pos_id = 'ShoppingCost::pos::'.$fromCity.'_'.$toCity.'_'.$weight;
 
+            /* JNE */
+            if (!Cache::isStored($cache_jne_id)) {
+                $roa = $this->checkRajaOngkirApi($rowMyCarrier["api_key"], $fromCity, $toCity, $weight, 'jne');
+                $response = $roa["response"];
+                $error_response = $roa["error"];
 
-             if (!Cache::isStored($cache_jne_id)) {
-
-                $curlCostJne = curl_init();
-
-                curl_setopt_array($curlCostJne, array(
-                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => "",
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => "POST",
-                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=jne",
-                  CURLOPT_IPRESOLVE => true,
-                  CURL_IPRESOLVE_V4 => true,
-                  CURLOPT_ENCODING => true,
-                  CURLOPT_HTTPHEADER => array(
-                    "content-type: application/x-www-form-urlencoded",
-                    "key: ".$rowMyCarrier['api_key']
-                  ),
-                ));
-
-                $responseCostJne = curl_exec($curlCostJne);
-
-                 $errCostJne = curl_error($curlCostJne);
-
-                curl_close($curlCostJne);
-                if ($errCostJne) {
-                  //echo "cURL Error #:" . $errCostJne;
+                if ($error_response) {
+                    // bad things happened, and we have no shipping cost
+                    // better we throw something here...
+                    // TODO: shipping price is free if RajaOngkir API is dead.
+                    return FALSE;
                 } else {
-                    Cache::store($cache_jne_id, $responseCostJne);
+                    // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
+                    Cache::store($cache_jne_id, $response);
                 }
-                
-             }        
-             else {
+            } else {
                 $responseCostJne = Cache::retrieve($cache_jne_id);
                 // dump($responseCostJne, "cachejne");
-             } 
+            }
 
-            
-           
-            /* JNE */
+            /* TIKI */
+            if (!Cache::isStored($cache_tiki_id)) {
+                $roa = $this->checkRajaOngkirApi($rowMyCarrier["api_key"], $fromCity, $toCity, $weight, 'tiki');
+                $response = $roa["response"];
+                $error_response = $roa["error"];
 
-
-             if (!Cache::isStored($cache_tiki_id)) {
-                 $curlCostTiki = curl_init();
-
-                curl_setopt_array($curlCostTiki, array(
-                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => "",
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => "POST",
-                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=tiki",
-                  CURLOPT_IPRESOLVE => true,
-                  CURL_IPRESOLVE_V4 => true,
-                  CURLOPT_ENCODING => true,
-                  CURLOPT_HTTPHEADER => array(
-                    "content-type: application/x-www-form-urlencoded",
-                    "key: ".$rowMyCarrier['api_key']
-                  ),
-                ));
-
-                $responseCostTiki = curl_exec($curlCostTiki);
-                $errCostTiki = curl_error($curlCostTiki);
-
-                curl_close($curlCostTiki);
-                if ($errCostTiki) {
-                  //echo "cURL Error #:" . $errCostTiki;
+                if ($error_response) {
+                    // bad things happened, and we have no shipping cost
+                    // better we throw something here...
+                    // TODO: shipping price is free if RajaOngkir API is dead.
+                    return FALSE;
                 } else {
-                   Cache::store($cache_tiki_id, $responseCostTiki);
+                    // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
+                    Cache::store($cache_tiki_id, $response);
                 }
-
-             }        
-             else {
+            } else {
                 $responseCostTiki = Cache::retrieve($cache_tiki_id);
                 // dump($responseCostTiki, "cachetiki");
-             }  
-            /* TIKI */
-           
-            /* TIKI */
+            }
 
             /* POS */
             if (!Cache::isStored($cache_pos_id)) {
+                $roa = $this->checkRajaOngkirApi($rowMyCarrier["api_key"], $fromCity, $toCity, $weight, 'pos');
+                $response = $roa["response"];
+                $error_response = $roa["error"];
 
-                $curlCostPos = curl_init();
-
-                curl_setopt_array($curlCostPos, array(
-                  CURLOPT_URL => "https://api.rajaongkir.com/starter/cost",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => "",
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => "POST",
-                  CURLOPT_POSTFIELDS => "origin=".$fromCity."&destination=".$toCity."&weight=".$weight."&courier=pos",
-                  CURLOPT_IPRESOLVE => true,
-                  CURL_IPRESOLVE_V4 => true,
-                  CURLOPT_ENCODING => true,
-                  CURLOPT_HTTPHEADER => array(
-                    "content-type: application/x-www-form-urlencoded",
-                    "key: ".$rowMyCarrier['api_key']
-                  ),
-                ));
-
-                $responseCostPos = curl_exec($curlCostPos);
-                $errCostPos = curl_error($curlCostPos);
-                
-                curl_close($curlCostPos);
-
-                if ($errCostPos) {
-                  //echo "cURL Error #:" . $errCostPos;
-                }    else {
-                   Cache::store($cache_pos_id, $responseCostPos);
+                if ($error_response) {
+                    // bad things happened, and we have no shipping cost
+                    // better we throw something here...
+                    // TODO: shipping price is free if RajaOngkir API is dead.
+                    return FALSE;
+                } else {
+                    // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
+                    Cache::store($cache_pos_id, $response);
                 }
-
-
-             }        
-             else {
+            } else {
                 $responseCostPos = Cache::retrieve($cache_pos_id);
                 // dump($responseCostPos, "cachepos");
-             } 
-            /* POS */  
+            } 
+
             $responseCostJne = json_decode($responseCostJne);        
             $ongkirOkeJne = false;
             $ongkirRegJne = false;
@@ -553,11 +488,7 @@ class mycarrier_rj extends CarrierModule
                 }
             }           
 
-            $responseCostTiki = json_decode($responseCostTiki);     
-            /*$ongkirTiki1=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostTiki->rajaongkir->results[0]->costs[0]->cost[0]->value)){
-                $ongkirTiki1=$responseCostTiki->rajaongkir->results[0]->costs[0]->cost[0]->value;
-            }*/
+            $responseCostTiki = json_decode($responseCostTiki);
             $ongkirTiki2=false;//PREPARE ONGKIR VALUE
             if(isset($responseCostTiki->rajaongkir->results[0]->costs[1]->cost[0]->value)){
                 foreach ($responseCostTiki->rajaongkir->results[0]->costs as $value) {
@@ -586,11 +517,7 @@ class mycarrier_rj extends CarrierModule
                 }
             }    
 
-            $responseCostPos = json_decode($responseCostPos);     
-            /*$ongkirPos1=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostPos->rajaongkir->results[0]->costs[0]->cost[0]->value)){
-                $ongkirPos1=$responseCostPos->rajaongkir->results[0]->costs[0]->cost[0]->value;
-            }*/
+            $responseCostPos = json_decode($responseCostPos);
             $ongkirPos2=false;//PREPARE ONGKIR VALUE
             if(isset($responseCostPos->rajaongkir->results[0]->costs[1]->cost[0]->value)){
                 foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
@@ -600,18 +527,6 @@ class mycarrier_rj extends CarrierModule
                     }
                 }
             }
-            /*$ongkirPos3=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostPos->rajaongkir->results[0]->costs[2]->cost[0]->value)){
-                $ongkirPos3=$responseCostPos->rajaongkir->results[0]->costs[2]->cost[0]->value;
-            }
-            $ongkirPos4=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostPos->rajaongkir->results[0]->costs[3]->cost[0]->value)){
-                $ongkirPos4=$responseCostPos->rajaongkir->results[0]->costs[3]->cost[0]->value;
-            }
-            $ongkirPos5=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostPos->rajaongkir->results[0]->costs[4]->cost[0]->value)){
-                $ongkirPos5=$responseCostPos->rajaongkir->results[0]->costs[4]->cost[0]->value;
-            }*/
             $ongkirPos6=false;//PREPARE ONGKIR VALUE
             if(isset($responseCostPos->rajaongkir->results[0]->costs[5]->cost[0]->value)){
                 foreach ($responseCostPos->rajaongkir->results[0]->costs as $value) {
@@ -621,10 +536,6 @@ class mycarrier_rj extends CarrierModule
                     }
                 }
             }
-            /*$ongkirPos7=false;//PREPARE ONGKIR VALUE
-            if(isset($responseCostPos->rajaongkir->results[0]->costs[6]->cost[0]->value)){
-                $ongkirPos7=$responseCostPos->rajaongkir->results[0]->costs[6]->cost[0]->value;
-            }*/
 
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj_reference')))
                 return $ongkirOkeJne;//ONGKIR KATEGORI OKE
@@ -636,31 +547,20 @@ class mycarrier_rj extends CarrierModule
                 return $ongkirCtcJne;//ONGKIR KATEGORI YES
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj32_reference')))
                 return $ongkirCtcYesJne;//ONGKIR KATEGORI YES
-            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj4_reference')))
-                return $ongkirTiki1;*/
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj5_reference')))
                 return $ongkirTiki2;
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj6_reference')))
                 return $ongkirTiki3;
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj7_reference')))
                 return $ongkirTiki4;
-
-            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj8_reference')))
-                return $ongkirPos1;*/
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj9_reference')))
                 return $ongkirPos2;
-            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj10_reference')))
-                return $ongkirPos3;
-            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj11_reference')))
-                return $ongkirPos4;
-            if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj12_reference')))
-                return $ongkirPos5;*/
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj13_reference')))
                 return $ongkirPos6;
-            /*if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj14_reference')))
-                return $ongkirPos7;*/
+
             return false;//HILANGKAN CARRIER BILA ONGKIR TIDAK TERSEDIA
         }
+
     }
 
     public function getOrderShippingCostExternal($params)//USE THIS IF CARRIER NEED RANGE = 0
@@ -668,56 +568,76 @@ class mycarrier_rj extends CarrierModule
         return $this->getOrderShippingCost($params, 0);
     }
 
-    public function hookActionCarrierUpdate($params)//This hook is required to ensure that the module will not lose connection with the carrier, created by the module
-    {
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj', $params['carrier']->id);
+    /**
+     * Hook method to call on Carrier update.
+     * @see mycarrier_rj::$_hooks
+     */
+    public function hookActionCarrierUpdate($params) {
+        // loops make things easier.
+        foreach ($this->_carriers as $carrier_name => $carrier_properties) {
+            foreach ($carrier_properties["services"] as $service_name => $service_properties) {
+                $service_prefix = $service_properties["prefix"];
+
+                if ($params["carrier"]->id_reference == Configuration::get(self::PREFIX . "{$service_prefix}_reference")) {
+                    Configuration::updateValue(self::PREFIX . "{$service_prefix}", $params["carrier"]->id);
+                }
+            }
         }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj2_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj2', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj3_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj3', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj31_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj31', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj32_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj32', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj4_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj4', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj5_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj5', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj6_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj6', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj7_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj7', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj8_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj8', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj9_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj9', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj10_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj10', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj11_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj11', $params['carrier']->id);
-        }
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj12_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj12', $params['carrier']->id);
-        }*/
-        if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj13_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj13', $params['carrier']->id);
-        }
-        /*if ($params['carrier']->id_reference == Configuration::get(self::PREFIX . 'mcj14_reference')) {
-            Configuration::updateValue(self::PREFIX . 'mcj14', $params['carrier']->id);
-        }*/
+    }
+
+    /**
+     * Log messages to a file.
+     * @param string $message Message to log.
+     * @return mixed
+     */
+    protected function log($message) {
+        $file_ext = ".log";
+        $ymd = strftime("%Y%m%d");
+        $file_path = "{$this->_LOG_PATH}{$this->_LOG_PREFIX}_{$ymd}{$file_ext}";
+
+        if (! $fp = @fopen($file_path, "ab")) { return FALSE; }
+
+        flock($fp, LOCK_EX);
+        $ctime = strftime("%Y-%m-%d %H:%M:%S");
+        return fwrite($fp, "[{$ctime}] {$message}\n");
+
+        fclose($fp);
+    }
+
+    /**
+     * Send a request to RajaOngkir API
+     * @param string $api_key RajaOngkir API key.
+     * @param int $origin Origin city ID.
+     * @param int $destination Destination city ID.
+     * @param float $weight Package weight, in grams.
+     * @param string $courier Courier flag.
+     * @return array
+     */
+    protected function checkRajaOngkirApi($api_key, $origin, $destination, $weight, $courier) {
+        $curl_obj = curl_init();
+
+        // TODO: handle RajaOngkir non-starter accounts.
+        curl_setopt_array($curl_obj, array(
+            CURLOPT_URL            => "https://api.rajaongkir.com/starter/cost",
+            CURLOPT_RETURNTRANSFER => TRUE,
+            CURLOPT_ENCODING       => "",
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_POST           => TRUE,
+            CURLOPT_POSTFIELDS     => "origin={$origin}&destination={$destination}&weight={$weight}&courier={$courier}",
+            CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
+            CURLOPT_HTTPHEADER     => array("key: {$api_key}"),
+        ));
+
+        $response = curl_exec($curl_obj);
+        $error_response = curl_error($curl_obj);
+        curl_close($curl_obj);
+
+        return array(
+            "response" => $response, 
+            "error" => $error_response
+        );
     }
 
 }
