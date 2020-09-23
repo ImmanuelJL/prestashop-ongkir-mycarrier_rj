@@ -558,8 +558,10 @@ class mycarrier_rj extends CarrierModule
             if ($this->id_carrier == (int)(Configuration::get(self::PREFIX.'mcj13_reference')))
                 return $ongkirPos6;
 
-            return false;//HILANGKAN CARRIER BILA ONGKIR TIDAK TERSEDIA
+            return false; // HILANGKAN CARRIER BILA ONGKIR TIDAK TERSEDIA
         }
+
+        return false; // HILANGKAN CARRIER BILA ONGKIR TIDAK TERSEDIA
 
     }
 
