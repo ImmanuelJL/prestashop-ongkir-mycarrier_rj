@@ -49,7 +49,7 @@ class mycarrier_rj extends CarrierModule
     {
         $this->name = 'mycarrier_rj';//MOLDULE NAME
         $this->tab = 'shipping_logistics';//TAB MODULE
-        $this->version = '1.0';//MODULE VERSION
+        $this->version = '1.1';//MODULE VERSION
         $this->author = 'Immanuel Julianto Lasmana';//CREATOR
         $this->bootstrap = TRUE;
         $this->module_key = '';
@@ -85,8 +85,15 @@ class mycarrier_rj extends CarrierModule
                 return FALSE;
             }
 
-            // COPY CustomerAddressFormatter INTO OVERRIDE CLASS
-            copy(dirname(__FILE__).'/controllers/front/CustomerAddressFormatter.php', _PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
+            if( _PS_VERSION_ < '1.7' ){
+                copy(dirname(__FILE__).'/controllers/front/AddressController.php', _PS_OVERRIDE_DIR_.'/controllers/front/AddressController.php');
+                rename(_PS_ROOT_DIR_.'/themes/default-bootstrap/address.tpl', _PS_ROOT_DIR_.'/themes/default-bootstrap/addressBAKMYCARRIERRJ.tpl');
+                copy(dirname(__FILE__).'/views/theme/address.tpl', _PS_ROOT_DIR_.'/themes/default-bootstrap/address.tpl');
+                unlink(_PS_ROOT_DIR_.'/cache/class_index.php');
+            }else{
+                // COPY CustomerAddressFormatter INTO OVERRIDE CLASS
+                copy(dirname(__FILE__).'/controllers/front/CustomerAddressFormatter.php', _PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
+            }
 
             return TRUE;
         }
@@ -235,8 +242,15 @@ class mycarrier_rj extends CarrierModule
                 return FALSE;
             }
 
-            // DELETE CustomerAddressFormatter FROM OVERRIDE CLASS            
-            unlink(_PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
+            if( _PS_VERSION_ < '1.7' ){
+                unlink(_PS_OVERRIDE_DIR_.'/classes/controller/AddressController.php');
+                unlink(_PS_ROOT_DIR_.'/themes/default-bootstrap/address.tpl');
+                rename(_PS_ROOT_DIR_.'/themes/default-bootstrap/addressBAKMYCARRIERRJ.tpl', _PS_ROOT_DIR_.'/themes/default-bootstrap/address.tpl');
+                unlink(_PS_ROOT_DIR_.'/cache/class_index.php');
+            }else{
+                // DELETE CustomerAddressFormatter FROM OVERRIDE CLASS            
+                unlink(_PS_OVERRIDE_DIR_.'/classes/form/CustomerAddressFormatter.php');
+            }
 
             return TRUE;
         }
