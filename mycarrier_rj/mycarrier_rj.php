@@ -430,6 +430,7 @@ class mycarrier_rj extends CarrierModule
                 } else {
                     // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
                     Cache::store($cache_jne_id, $response);
+                    $responseCostJne = $response;
                 }
             } else {
                 $responseCostJne = Cache::retrieve($cache_jne_id);
@@ -450,6 +451,7 @@ class mycarrier_rj extends CarrierModule
                 } else {
                     // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
                     Cache::store($cache_tiki_id, $response);
+                    $responseCostTiki = $response;
                 }
             } else {
                 $responseCostTiki = Cache::retrieve($cache_tiki_id);
@@ -470,6 +472,7 @@ class mycarrier_rj extends CarrierModule
                 } else {
                     // TODO: cache parsed results rather than cURL responses, reducing json_decode calls.
                     Cache::store($cache_pos_id, $response);
+                    $responseCostPos = $response;
                 }
             } else {
                 $responseCostPos = Cache::retrieve($cache_pos_id);
