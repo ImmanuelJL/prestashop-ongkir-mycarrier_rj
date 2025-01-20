@@ -1,6 +1,6 @@
 # Prestashop Module untuk biaya pengiriman menggunakan RAJAONGKIR
 
-Silahkan cek https://soft-gain.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut
+Silahkan cek https://softgain-technology.com/2019/02/07/module-cek-ongkir-jne-tiki-pos-prestashop/ untuk informasi lebih lanjut
 
 ## NOTE:
 1. Module ini tidak berafiliasi dengan RAJAONGKIR maupun Prestashop
